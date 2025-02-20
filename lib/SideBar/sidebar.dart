@@ -203,6 +203,19 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
                   label: 'Events'),
               SidebarXItem(
                   onTap: () {
+                    sidebarController.selectedindex.value = 3;
+
+
+                  },
+                  iconBuilder: (selected, hovered) {
+                    return Icon(
+                      Icons.home,
+                      color: Colors.transparent,
+                    );
+                  },
+                  label: 'Services'),
+              SidebarXItem(
+                  onTap: () {
                     sidebarController.selectedindex.value = 0;
                     sidebarController.controller =SidebarXController(selectedIndex: 0, extended: true);sidebarController.update();
                     //

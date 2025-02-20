@@ -8,6 +8,7 @@ import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
 
 import '../bookings.dart';
 import '../events.dart';
+import '../services.dart';
 import '../user_details.dart';
 
 class HomeMain extends StatefulWidget {
@@ -41,6 +42,8 @@ class _HomeMainState extends State<HomeMain> {
                         ? Bookings()
                         : sidebarController.selectedindex.value == 2
                         ? Events()
+                        : sidebarController.selectedindex.value == 3
+                        ? Services()
                         : UserDetails()))
               ],
             ),

@@ -38,6 +38,12 @@ dependencies:
   get:
   sidebarx: ^0.17.1
   flutter_svg:
+  firebase_core:
+  firebase_auth:
+  cloud_firestore:
+  firebase_storage:
+  firebase_auth_web:
+
 
 dev_dependencies:
   flutter_test:
