@@ -17,7 +17,7 @@ class _UserDetailsState extends State<UserDetails> {
   final SidebarController sidebarController = Get.put(SidebarController());
   String searchQuery = '';
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  List<Map<String, dynamic>> usersData = [];
+  List<Map<String, dynamic>> usersData = []; // Ensure this is initialized properly
 
   @override
   void initState() {
@@ -45,6 +45,7 @@ class _UserDetailsState extends State<UserDetails> {
       );
     }
   }
+
 
   Future<void> _deleteUser(String userId) async {
     bool? shouldDelete = await showDialog<bool>(
@@ -75,10 +76,11 @@ class _UserDetailsState extends State<UserDetails> {
 
     if (shouldDelete == true) {
       try {
-        await _firestore.collection('users').doc(userId).delete();
+        await _firestore.collection('all_users').doc(userId).delete();
         setState(() {
           usersData.removeWhere((user) => user['uid'] == userId);
         });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User deleted successfully')),
         );
@@ -93,62 +95,59 @@ class _UserDetailsState extends State<UserDetails> {
 
   Future<void> _editUser(
       String userId, String currentName, String currentEmail, String currentRole) async {
-    String? updatedName = currentName;
-    String? updatedEmail = currentEmail;
-    String selectedRole;
-
-    // Ensure selectedRole is a valid value, defaulting to 'User' if not.
-    if (['Admin', 'User', 'Guest'].contains(currentRole)) {
-      selectedRole = currentRole;
-    } else {
-      selectedRole = 'User'; // Default value
-      print("Warning: Invalid role '$currentRole' found in Firebase. Using default 'User'.");
-    }
+    String updatedName = currentName;
+    String updatedEmail = currentEmail;
+    String selectedRole = (['Admin', 'User', 'Guest'].contains(currentRole)) ? currentRole : 'User';
 
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: backgroundColor,
           title: const Text('Edit User'),
-          content: SizedBox(
-            height: 200,
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  initialValue: currentName,
-                  decoration: const InputDecoration(hintText: 'Name'),
-                  onChanged: (value) => updatedName = value,
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return SizedBox(
+                height: 200,
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      initialValue: currentName,
+                      decoration: const InputDecoration(hintText: 'Name'),
+                      onChanged: (value) => updatedName = value,
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      initialValue: currentEmail,
+                      decoration: const InputDecoration(hintText: 'Email'),
+                      onChanged: (value) => updatedEmail = value,
+                    ),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(),
+                      ),
+                      value: selectedRole,
+                      onChanged: (String? newValue) {
+                        setDialogState(() {
+                          selectedRole = newValue ?? 'User';
+                        });
+                      },
+                      items: <String>['Admin', 'User', 'Pro']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  initialValue: currentEmail,
-                  decoration: const InputDecoration(hintText: 'Email'),
-                  onChanged: (value) => updatedEmail = value,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  dropdownColor: backgroundColor,
-                  decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder()),
-                  value: selectedRole,
-                  onChanged: (String? newValue) {
-                    selectedRole = newValue ?? 'User'; // Fallback within onChanged too.
-                  },
-                  items: <String>['Admin', 'User', 'Guest']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           actions: [
             CustomButton(
@@ -165,7 +164,7 @@ class _UserDetailsState extends State<UserDetails> {
               text: 'Update',
               onPressed: () async {
                 try {
-                  await _firestore.collection('users').doc(userId).update({
+                  await _firestore.collection('all_users').doc(userId).update({
                     'user_name': updatedName,
                     'email': updatedEmail,
                     'role': selectedRole,
@@ -174,7 +173,7 @@ class _UserDetailsState extends State<UserDetails> {
                   setState(() {
                     final index = usersData.indexWhere((user) => user['uid'] == userId);
                     if (index != -1) {
-                      usersData[index]['name'] = updatedName;
+                      usersData[index]['user_name'] = updatedName;
                       usersData[index]['email'] = updatedEmail;
                       usersData[index]['role'] = selectedRole;
                     }
@@ -197,6 +196,7 @@ class _UserDetailsState extends State<UserDetails> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +328,7 @@ class _UserDetailsState extends State<UserDetails> {
                                     user['role'] ?? '',
                                   ),
                                   icon: const Icon(Icons.edit),
-                                  color: blackColor,
+                                  color: orange,
                                 ),
                                 IconButton(
                                   onPressed: () => _deleteUser(user['uid']),

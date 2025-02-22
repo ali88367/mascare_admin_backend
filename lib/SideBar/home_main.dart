@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
+import 'package:mascare_admin_backend/pro_approve.dart';
 
 import '../advertisment.dart';
 import '../bookings.dart';
@@ -38,12 +39,14 @@ class _HomeMainState extends State<HomeMain> {
                     child: Obx(() => sidebarController.selectedindex.value == 0
                         ? UserDetails()
                         : sidebarController.selectedindex.value == 1
-                        ? Bookings()
+                        ? ProApprove()
                         : sidebarController.selectedindex.value == 2
-                        ? AddEvents()
+                        ? Bookings()
                         : sidebarController.selectedindex.value == 3
-                        ? AddAdvertisement()
+                        ? AddEvents()
                         : sidebarController.selectedindex.value == 4
+                        ? AddAdvertisement()
+                        : sidebarController.selectedindex.value == 5
                         ? Services()
                         : UserDetails()))
               ],

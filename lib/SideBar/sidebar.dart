@@ -128,20 +128,25 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 1,
+              icon: Icons.person,
+              label: 'Approve Pro',
+            ),
+            SidebarXItem(
+              onTap: () => sidebarController.selectedindex.value = 2,
               icon: Icons.book,
               label: 'Bookings',
             ),
             SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 2,
+              onTap: () => sidebarController.selectedindex.value = 3,
               icon: Icons.event,
               label: 'Events',
             ),
             SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 3,
+              onTap: () => sidebarController.selectedindex.value = 4,
               icon: Icons.campaign,              label: 'Advertisement',
             ),
             SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 4,
+              onTap: () => sidebarController.selectedindex.value = 5,
               icon: Icons.build,
               label: 'Services',
             ),
