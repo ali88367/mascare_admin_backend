@@ -60,24 +60,24 @@ class InputField extends StatelessWidget {
         hintText: hint,
         hintStyle: hintStyle,
         labelText: label,
-        labelStyle: const TextStyle(color: primaryColorKom),
+        labelStyle: const TextStyle(color: blackColor),
         contentPadding: contentPadding,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: primaryColorKom),
+          borderSide: const BorderSide(color: blackColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: primaryColorKom),
+          borderSide: const BorderSide(color: blackColor),
 
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: primaryColorKom),
+          borderSide: const BorderSide(color: blackColor),
 
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: primaryColorKom),
+          borderSide: const BorderSide(color: blackColor),
 
           borderRadius: BorderRadius.circular(15),
         ),

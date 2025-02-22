@@ -9,7 +9,7 @@ class Bookings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: darkBlue,
       appBar: AppBar(
         title: const Text('Bookings'),
       ),

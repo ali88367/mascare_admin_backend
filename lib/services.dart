@@ -8,8 +8,7 @@ class Services extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(title: const Text("Services")),
+      backgroundColor: darkBlue,
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('services').snapshots(),
         builder: (context, snapshot) {
@@ -29,6 +28,7 @@ class Services extends StatelessWidget {
               var data = services[index].data() as Map<String, dynamic>;
 
               return Card(
+                color: darkBlue,
                 margin: const EdgeInsets.all(8.0),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -49,26 +49,26 @@ class Services extends StatelessWidget {
 
                       // Service Name
                       Text("Service: ${data['name'] ?? 'No Name'}",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: orange)),
 
                       // About Service
-                      Text("About: ${data['about_service'] ?? 'N/A'}"),
+                      Text("About: ${data['about_service'] ?? 'N/A'}",style: TextStyle(color: whiteColor),),
 
                       // Note to Parents
-                      Text("Note: ${data['note_to_parents'] ?? 'N/A'}"),
+                      Text("Note: ${data['note_to_parents'] ?? 'N/A'}",style: TextStyle(color: whiteColor)),
 
                       // Price per Hour
-                      Text("Price per Hour: \$${data['price_per_hour'] ?? 'N/A'}"),
+                      Text("Price per Hour: \$${data['price_per_hour'] ?? 'N/A'}",style: TextStyle(color: whiteColor)),
 
                       // Service Provider
-                      Text("Service Provider: ${data['service_provider'] ?? 'N/A'}"),
+                      Text("Service Provider: ${data['service_provider'] ?? 'N/A'}",style: TextStyle(color: whiteColor)),
 
                       // Company Registration
-                      Text("Company Registration: ${data['company_registration'] ?? 'N/A'}"),
+                      Text("Company Registration: ${data['company_registration'] ?? 'N/A'}",style: TextStyle(color: whiteColor)),
 
                       // Dates and Times
-                      Text("From: ${data['from_date'] ?? 'N/A'} ${data['from_time'] ?? ''}"),
-                      Text("To: ${data['to_date'] ?? 'N/A'} ${data['to_time'] ?? ''}"),
+                      Text("From: ${data['from_date'] ?? 'N/A'} ${data['from_time'] ?? ''}",style: TextStyle(color: whiteColor)),
+                      Text("To: ${data['to_date'] ?? 'N/A'} ${data['to_time'] ?? ''}",style: TextStyle(color: whiteColor)),
 
                       const SizedBox(height: 8),
 
@@ -77,7 +77,7 @@ class Services extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Full-time Care:", style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text("Full-time Care:", style: TextStyle(fontWeight: FontWeight.bold,color: whiteColor)),
                             ...List.generate(
                               data['full_time_care'].length,
                                   (i) => Text("- ${data['full_time_care'][i]}"),
@@ -92,10 +92,10 @@ class Services extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Mentioned Services:", style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text("Mentioned Services:", style: TextStyle(fontWeight: FontWeight.bold,color: orange)),
                             ...List.generate(
                               data['mentioned_services'].length,
-                                  (i) => Text("- ${data['mentioned_services'][i]}"),
+                                  (i) => Text("- ${data['mentioned_services'][i]}",style: TextStyle(color: whiteColor),),
                             ),
                           ],
                         ),
@@ -107,10 +107,10 @@ class Services extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Customers:", style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text("Customers:", style: TextStyle(fontWeight: FontWeight.bold,color: orange)),
                             ...List.generate(
                               data['customers'].length,
-                                  (i) => Text("- ${data['customers'][i]}"),
+                                  (i) => Text("- ${data['customers'][i]}",style: TextStyle(color: whiteColor),),
                             ),
                           ],
                         ),

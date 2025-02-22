@@ -203,7 +203,7 @@ class _UserDetailsState extends State<UserDetails> {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: darkBlue,
       body: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: width < 768 ? 20 : 60,
@@ -230,11 +230,11 @@ class _UserDetailsState extends State<UserDetails> {
                   },
                   decoration: const InputDecoration(
                     hintText: 'Search',
-                    hintStyle: TextStyle(color: Colors.grey),
+                    hintStyle: TextStyle(color: orange),
                     fillColor: Colors.white,
                     filled: true,
                     border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: orange),
                   ),
                 ),
               ),
@@ -248,14 +248,14 @@ class _UserDetailsState extends State<UserDetails> {
                   Expanded(
                     child: Text(
                       'Name',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: orange),
                       textAlign: TextAlign.center,
                     ),
                   ),
                   Expanded(
                     child: Text(
                       'Email',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: orange),
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -263,7 +263,7 @@ class _UserDetailsState extends State<UserDetails> {
                   Expanded(
                     child: Text(
                       'Role',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: orange),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -300,7 +300,7 @@ class _UserDetailsState extends State<UserDetails> {
                                 user['name'] ?? '',
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(fontSize: 16,color: Colors.white),
                               ),
                             ),
                             Expanded(
@@ -308,14 +308,14 @@ class _UserDetailsState extends State<UserDetails> {
                                 user['email'] ?? '',
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(fontSize: 16,color: Colors.white),
                               ),
                             ),
                             Expanded(
                               child: Text(
                                 user['role'] ?? '',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(fontSize: 16,color: Colors.white),
                               ),
                             ),
                             Row(
@@ -328,7 +328,7 @@ class _UserDetailsState extends State<UserDetails> {
                                     user['role'] ?? '',
                                   ),
                                   icon: const Icon(Icons.edit),
-                                  color: primaryColorKom,
+                                  color: blackColor,
                                 ),
                                 IconButton(
                                   onPressed: () => _deleteUser(user['uid']),
@@ -339,7 +339,10 @@ class _UserDetailsState extends State<UserDetails> {
                             ),
                           ],
                         ),
+                        SizedBox(height: 10,),
                         const Divider(),
+                        SizedBox(height: 10,),
+
                       ],
                     ),
                   );
