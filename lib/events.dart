@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart'; // Import this for DateFormat
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:mascare_admin_backend/widgets/custom_button.dart';
 
@@ -21,27 +22,72 @@ class _AddEventsState extends State<AddEvents> {
   Uint8List? _image;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _organizerController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _fromTimeController = TextEditingController();
+  final TextEditingController _toTimeController = TextEditingController();
+  final TextEditingController _ticketPriceController = TextEditingController();
+  final TextEditingController _contactNumberController =
+  TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _titleController.clear();
-    _descriptionController.clear();
+  Future<void> _pickDate() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+      });
+    }
+  }
+
+  Future<void> _pickTime(TextEditingController controller) async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      final now = DateTime.now();
+      final formattedTime = DateFormat('hh:mm a').format(DateTime(
+        now.year,
+        now.month,
+        now.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      ));
+
+      setState(() {
+        controller.text = formattedTime;
+      });
+    }
   }
 
   Future<void> addEvent() async {
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+    if (_titleController.text.isEmpty ||
+        _descriptionController.text.isEmpty ||
+        _organizerController.text.isEmpty ||
+        _dateController.text.isEmpty ||
+        _fromTimeController.text.isEmpty ||
+        _toTimeController.text.isEmpty ||
+        _ticketPriceController.text.isEmpty ||
+        _contactNumberController.text.isEmpty ||
+        _addressController.text.isEmpty) {
       Get.snackbar(
         "Error",
-        "Title and description are required!",
+        "All fields are required!",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
       return;
     }
 
-    String downloadUrl = ""; // Default value for no image
-
+    String downloadUrl = "";
     try {
       if (_image != null) {
         String fileName = 'event_pictures/${_titleController.text}.jpg';
@@ -56,7 +102,14 @@ class _AddEventsState extends State<AddEvents> {
       await _firestore.collection('events').add({
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'image_url': downloadUrl, // Store image URL (empty if no image)
+        'organizer': _organizerController.text.trim(),
+        'date': _dateController.text.trim(),
+        'from_time': _fromTimeController.text.trim(),
+        'to_time': _toTimeController.text.trim(),
+        'ticket_price': _ticketPriceController.text.trim(),
+        'contact_number': _contactNumberController.text.trim(),
+        'address': _addressController.text.trim(),
+        'image_url': downloadUrl,
         'created_at': FieldValue.serverTimestamp(),
       });
 
@@ -69,15 +122,20 @@ class _AddEventsState extends State<AddEvents> {
 
       _titleController.clear();
       _descriptionController.clear();
+      _organizerController.clear();
+      _dateController.clear();
+      _fromTimeController.clear();
+      _toTimeController.clear();
+      _ticketPriceController.clear();
+      _contactNumberController.clear();
+      _addressController.clear();
       setState(() {
         _image = null;
       });
     } catch (e) {
-      debugPrint("Error while posting: $e");
       Get.snackbar(
         "Error",
         "Failed to add event: $e",
-        snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -88,7 +146,6 @@ class _AddEventsState extends State<AddEvents> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
     );
-
     if (result != null) {
       setState(() {
         _image = result.files.first.bytes;
@@ -99,23 +156,22 @@ class _AddEventsState extends State<AddEvents> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:darkBlue,
-
+      backgroundColor: darkBlue,
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 700),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                SizedBox(width: 10,),
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
                       height: 200,
-                      width: 300,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.grey[300],
@@ -131,21 +187,50 @@ class _AddEventsState extends State<AddEvents> {
                       ),
                     ),
                   ),
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputField("Enter Title", _titleController),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: _buildInputField(
+                            "Ticket Price", _ticketPriceController,
+                            isNumber: true),
+                      )
+                    ],
+                  ),
+                  _buildInputField("Enter Description", _descriptionController,
+                      maxLines: 5),
+                  _buildInputField("Organizer Name", _organizerController),
+                  _buildDatePickerField("Event Date", _dateController, _pickDate),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTimePickerField(
+                            "From Time", _fromTimeController, () => _pickTime(_fromTimeController)),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                        child: _buildTimePickerField(
+                            "To Time", _toTimeController, () => _pickTime(_toTimeController)),
+                      ),
+                    ],
+                  ),
+                  _buildInputField("Contact Number", _contactNumberController,
+                      isNumber: true),
+                  _buildInputField("Address", _addressController, maxLines: 3),
+                  SizedBox(height: 30),
+                  CustomButton(
+                      text: 'Add Event',
+                      onPressed: addEvent,
+                      color: orange,
+                      height: 50,
+                      width: 700),
                 ],
               ),
-              SizedBox(height: 20),
-              Text('Enter Title',style: TextStyle(color: orange,fontWeight: FontWeight.w500,fontSize: 20),),
-              SizedBox(height: 10),
-
-              _buildInputField("Event Title", context, _titleController, maxLines: 1),
-              SizedBox(height: 20),
-              Text('Enter Description',style: TextStyle(color: orange,fontWeight: FontWeight.w500,fontSize: 20),),
-              SizedBox(height: 10),
-
-              _buildInputField("Event Description", context, _descriptionController, maxLines: 5),
-              SizedBox(height: 50),
-            CustomButton(text: 'Add Event', onPressed: addEvent,color: orange,height: 50,width: 200,)
-            ],
+            ),
           ),
         ),
       ),
@@ -153,40 +238,70 @@ class _AddEventsState extends State<AddEvents> {
   }
 }
 
-Widget _buildInputField(
-    String labelText,
-    BuildContext context,
-    TextEditingController controller, {
-      bool isNumber = false,
-      int maxLines = 1,
-    }) {
-  final screenWidth = MediaQuery.of(context).size.width;
-
-  return ConstrainedBox(  // Use ConstrainedBox to limit width
-    constraints: BoxConstraints(
-      maxWidth: 700,  // Set maximum width
-    ),
+Widget _buildInputField(String label, TextEditingController controller,
+    {bool isNumber = false, int maxLines = 1}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 15),
     child: TextField(
       controller: controller,
-      maxLines: maxLines,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: TextStyle(color: Colors.black),
+      maxLines: maxLines,
+      style: TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        labelText: null, // Removes the label text
-        hintText: null,
-        hintStyle:  TextStyle(color: Colors.black),
-        isDense: true,// Ensures there's no hint text inside the field
-        // contentPadding: EdgeInsets.symmetric(vertical: verticalPadding(width), horizontal: horizontalPadding(width)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blueGrey[300]!), // Lighter border color
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
         ),
-        filled: true,
-        fillColor: Color.fromRGBO(240, 240, 240, 1), // Lighter background color
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: orange), // Focused border color
+          borderSide: BorderSide(color: orange),
         ),
+      ),
+    ),
+  );
+}
+
+Widget _buildDatePickerField(String label, TextEditingController controller, VoidCallback onTap) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 15),
+    child: TextField(
+      controller: controller,
+      readOnly: true, // Prevent manual input
+      onTap: onTap, // Open date picker when tapped
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: orange),
+        ),
+        suffixIcon: Icon(Icons.calendar_today, color: Colors.white),
+      ),
+    ),
+  );
+}
+
+Widget _buildTimePickerField(String label, TextEditingController controller, VoidCallback onTap) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 15),
+    child: TextField(
+      controller: controller,
+      readOnly: true, // Prevent manual input
+      onTap: onTap, // Open time picker when tapped
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: orange),
+        ),
+        suffixIcon: Icon(Icons.access_time, color: Colors.white),
       ),
     ),
   );

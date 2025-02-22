@@ -44,6 +44,7 @@ dependencies:
   firebase_storage:
   firebase_auth_web:
   file_picker:
+  intl:
 
 
 dev_dependencies:
