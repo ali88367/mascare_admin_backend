@@ -10,16 +10,10 @@ import 'SideBar/home_main.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,  // Use generated options
+    options: DefaultFirebaseOptions.currentPlatform,
   );
-
-
-
   runApp(const MyApp());
 }
-
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -29,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Admin Panel',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Login(),
+      home: HomeMain(),
     );
   }
 }

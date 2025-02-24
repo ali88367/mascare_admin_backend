@@ -47,7 +47,7 @@ class _UserDetailsState extends State<UserDetails> {
   }
 
 
-  Future<void> _deleteUser(String userId) async {
+  Future<void> _deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
     bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -76,10 +76,56 @@ class _UserDetailsState extends State<UserDetails> {
 
     if (shouldDelete == true) {
       try {
-        await _firestore.collection('all_users').doc(userId).delete();
-        setState(() {
-          usersData.removeWhere((user) => user['uid'] == userId);
+        // Update the user document instead of deleting it
+        await _firestore.collection('all_users').doc(userId).update({
+          'user_name': 'Deleted User',
+          'number': '0000000',
+          'is_deleted': true, // Mark user as deleted
         });
+
+        // Update the user document instead of deleting it
+        await _firestore.collection('services').doc(userId).update({
+
+          'availability': true,
+        });
+        // Update the UI
+        setState(() {
+          for (var user in usersData) {
+            if (user['uid'] == userId) {
+              user['name'] = 'Deleted User';
+              user['number'] = '0000000';
+              user['is_deleted'] = true;
+              break;
+            }
+          }
+        });
+
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User marked as deleted')),
+        );
+        // Fetch the signup records document
+        DocumentReference signupRecordsRef = _firestore.collection('records').doc('signup_records');
+        DocumentSnapshot snapshot = await signupRecordsRef.get();
+
+        if (snapshot.exists) {
+          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+
+          List<dynamic> emails = List.from(data['emails'] ?? []);
+          List<dynamic> usernames = List.from(data['user_names'] ?? []);
+          List<dynamic> phoneNumbers = List.from(data['numbers'] ?? []);
+
+          emails.remove(email);
+          usernames.remove(username);
+          phoneNumbers.remove(phoneNumber);
+
+          // Update Firestore with the modified arrays
+          await signupRecordsRef.update({
+            'emails': emails,
+            'user_names': usernames,
+            'numbers': phoneNumbers,
+          });
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User deleted successfully')),
@@ -92,6 +138,7 @@ class _UserDetailsState extends State<UserDetails> {
       }
     }
   }
+
 
   Future<void> _editUser(
       String userId, String currentName, String currentEmail, String currentRole) async {
@@ -321,17 +368,24 @@ class _UserDetailsState extends State<UserDetails> {
                             Row(
                               children: [
                                 IconButton(
-                                  onPressed: () => _editUser(
-                                    user['uid'],
-                                    user['name'] ?? '',
+                                  onPressed: () => _deleteUser(
+                                    user['uid'] ?? '',
                                     user['email'] ?? '',
-                                    user['role'] ?? '',
+                                    user['user_name'] ?? '',
+                                    user['phone_number'] ?? '',
                                   ),
+
                                   icon: const Icon(Icons.edit),
                                   color: orange,
                                 ),
                                 IconButton(
-                                  onPressed: () => _deleteUser(user['uid']),
+                                  onPressed: () => _deleteUser(
+                                    user['uid'],
+                                    user['email'],
+                                    user['user_name'],
+                                    user['phone_number'],
+                                  ),
+
                                   icon: const Icon(Icons.delete),
                                   color: Colors.red,
                                 ),

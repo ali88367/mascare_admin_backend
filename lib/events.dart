@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:mascare_admin_backend/colors.dart';
+import 'event_details.dart';
 
 class Events extends StatelessWidget {
   const Events({super.key});
@@ -9,56 +12,80 @@ class Events extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBlue,
-      appBar: AppBar(title: const Text("Events")),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('events').snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          // Show loading indicator
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: StreamBuilder(
+            stream: FirebaseFirestore.instance.collection('events').snapshots(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return const Center(child: Text("Error loading events"));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text("No events available"));
+              }
 
-          // Handle errors
-          if (snapshot.hasError) {
-            return const Center(child: Text("Error loading events"));
-          }
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  var event = snapshot.data!.docs[index];
+                  String title = event['title'] ?? "No Title";
+                  String date = event['date'] ?? "No Date";
 
-          // If no events found
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No events available"));
-          }
+                  // Convert date string to a readable format
+                  String formattedDate;
+                  try {
+                    DateTime parsedDate = DateTime.parse(date);
+                    formattedDate = DateFormat.yMMMMd().format(parsedDate);
+                  } catch (e) {
+                    formattedDate = date;
+                  }
 
-          // Display list of events
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var event = snapshot.data!.docs[index];
-              String title = event['title'] ?? "No Title";
-              String date = event['date'] ?? "No Date";
-
-              // Check if 'image' field exists
-            //  String? imageUrl = event.data().toString().contains('image') ? event['image'] : null;
-
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  // leading: ClipRRect(
-                  //   borderRadius: BorderRadius.circular(8), // Rounded corners
-                  //   child: imageUrl != null && imageUrl.isNotEmpty
-                  //       ? Image.network(imageUrl, width: 50, height: 50, fit: BoxFit.cover)
-                  //       : Image.asset("assets/default_event.png", width: 50, height: 50, fit: BoxFit.cover), // Default image
-                  // ),
-                  title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(date),
-                  trailing: const Icon(Icons.arrow_forward),
-                  onTap: () {
-                    // Navigate to event details screen or show more info
-                  },
-                ),
+                  return GestureDetector(
+                    onTap: () {
+                      Get.to(() => EventDetails(event: event));
+                    },
+                    child: Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(15),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            "assets/images/logo.png",
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          formattedDate,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                      ),
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ),
       ),
     );
   }
