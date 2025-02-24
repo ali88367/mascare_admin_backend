@@ -35,9 +35,23 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
   Future<void> addAdvertisement() async {
     if (_formKey.currentState!.validate()) {
       try {
+        String imageUrl = "";
+
+        if (_image != null) {
+          // Upload image to Firebase Storage
+          Reference ref = _storage
+              .ref()
+              .child('advertisements/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+          UploadTask uploadTask = ref.putData(_image!);
+          TaskSnapshot snapshot = await uploadTask;
+          imageUrl = await snapshot.ref.getDownloadURL();
+        }
+
+        // Save to Firestore with image URL
         await _firestore.collection('advertisements').add({
           'title': _titleController.text.trim(),
-          'image_url': "", // Always send an empty string
+          'image_url': imageUrl,
           'created_at': FieldValue.serverTimestamp(),
         });
 

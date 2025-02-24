@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -47,6 +48,7 @@ class _UserDetailsState extends State<UserDetails> {
   }
 
 
+
   Future<void> _deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
     bool? shouldDelete = await showDialog<bool>(
       context: context,
@@ -76,19 +78,17 @@ class _UserDetailsState extends State<UserDetails> {
 
     if (shouldDelete == true) {
       try {
-        // Update the user document instead of deleting it
+        // Update Firestore user record
         await _firestore.collection('all_users').doc(userId).update({
           'user_name': 'Deleted User',
           'number': '0000000',
-          'is_deleted': true, // Mark user as deleted
+          'is_deleted': true, // Mark as deleted
         });
 
-        // Update the user document instead of deleting it
         await _firestore.collection('services').doc(userId).update({
-
           'availability': true,
         });
-        // Update the UI
+
         setState(() {
           for (var user in usersData) {
             if (user['uid'] == userId) {
@@ -100,11 +100,11 @@ class _UserDetailsState extends State<UserDetails> {
           }
         });
 
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User marked as deleted')),
         );
-        // Fetch the signup records document
+
+        // Remove user data from signup records
         DocumentReference signupRecordsRef = _firestore.collection('records').doc('signup_records');
         DocumentSnapshot snapshot = await signupRecordsRef.get();
 
@@ -119,12 +119,19 @@ class _UserDetailsState extends State<UserDetails> {
           usernames.remove(username);
           phoneNumbers.remove(phoneNumber);
 
-          // Update Firestore with the modified arrays
           await signupRecordsRef.update({
             'emails': emails,
             'user_names': usernames,
             'numbers': phoneNumbers,
           });
+        }
+
+        // Delete user from Firebase Authentication (only works if the user is signed in)
+        User? user = FirebaseAuth.instance.currentUser;
+        if (user != null && user.uid == userId) {
+          await user.delete();
+        } else {
+          print("Cannot delete user from Firebase Auth: User must be signed in.");
         }
 
         ScaffoldMessenger.of(context).showSnackBar(

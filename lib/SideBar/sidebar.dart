@@ -58,6 +58,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
         return SidebarX(
           controller: sidebarController.controller,
           theme: SidebarXTheme(
+            hoverTextStyle: TextStyle(color: orange),
             margin: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: darkBlue,

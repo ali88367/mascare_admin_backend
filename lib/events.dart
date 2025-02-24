@@ -8,6 +8,82 @@ import 'event_details.dart';
 class Events extends StatelessWidget {
   const Events({super.key});
 
+  void _editEvent(BuildContext context, DocumentSnapshot event) {
+    TextEditingController titleController =
+    TextEditingController(text: event['title']);
+    TextEditingController dateController =
+    TextEditingController(text: event['date']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Event"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: "Title"),
+              ),
+              TextField(
+                controller: dateController,
+                decoration: const InputDecoration(labelText: "Date (YYYY-MM-DD)"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('events')
+                    .doc(event.id)
+                    .update({
+                  'title': titleController.text,
+                  'date': dateController.text,
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteEvent(BuildContext context, String eventId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Event"),
+          content: const Text("Are you sure you want to delete this event?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('events')
+                    .doc(eventId)
+                    .delete();
+                Navigator.pop(context);
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,15 +105,21 @@ class Events extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
                   var event = snapshot.data!.docs[index];
                   String title = event['title'] ?? "No Title";
                   String date = event['date'] ?? "No Date";
                   String image_url = event['image_url'] ?? "";
-                  debugPrint("Fetched image URL: $image_url");
 
+                  // Use a static test URL if the fetched URL is empty or causes an error
+                  const String testImageUrl =
+                      "https://via.placeholder.com/150"; // Placeholder image
+                  image_url = image_url.isNotEmpty ? image_url : testImageUrl;
+
+                  debugPrint("Using image URL: $image_url");
 
                   // Convert date string to a readable format
                   String formattedDate;
@@ -54,7 +136,8 @@ class Events extends StatelessWidget {
                     },
                     child: Card(
                       elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -62,22 +145,24 @@ class Events extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(15),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: image_url.isNotEmpty
-                              ? Image.network(
+                          child: Image.network(
                             image_url,
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
+                            loadingBuilder:
+                                (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
                               return SizedBox(
                                 width: 60,
                                 height: 60,
-                                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                child: const Center(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2)),
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
-                              debugPrint("Error loading image: $error"); // Debugging
+                              debugPrint("Error loading image: $error");
                               return Image.asset(
                                 "assets/images/logo.png",
                                 width: 60,
@@ -85,15 +170,8 @@ class Events extends StatelessWidget {
                                 fit: BoxFit.cover,
                               );
                             },
-                          )
-                              : Image.asset(
-                            "assets/images/logo.png",
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
                           ),
                         ),
-
                         title: Text(
                           title,
                           style: const TextStyle(
@@ -105,7 +183,21 @@ class Events extends StatelessWidget {
                           formattedDate,
                           style: const TextStyle(color: Colors.grey),
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _editEvent(context, event),
+                            ),
+                            IconButton(
+                              icon:
+                              const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () =>
+                                  _deleteEvent(context, event.id),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
