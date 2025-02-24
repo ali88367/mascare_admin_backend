@@ -8,6 +8,10 @@ import 'package:intl/intl.dart'; // Import this for DateFormat
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:mascare_admin_backend/widgets/custom_button.dart';
 
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 class AddEvents extends StatefulWidget {
   AddEvents({super.key});
 
@@ -77,10 +81,11 @@ class _AddEventsState extends State<AddEvents> {
         _toTimeController.text.isEmpty ||
         _ticketPriceController.text.isEmpty ||
         _contactNumberController.text.isEmpty ||
-        _addressController.text.isEmpty) {
+        _addressController.text.isEmpty ||
+        _image == null) { // Ensure image is selected
       Get.snackbar(
         "Error",
-        "All fields are required!",
+        "All fields are required, including an image!",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -88,6 +93,10 @@ class _AddEventsState extends State<AddEvents> {
     }
 
     try {
+      // Upload image to Firebase Storage
+      String? imageUrl = await _uploadImageToStorage();
+
+      // Store event data in Firestore
       await _firestore.collection('events').add({
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -98,7 +107,7 @@ class _AddEventsState extends State<AddEvents> {
         'ticket_price': _ticketPriceController.text.trim(),
         'contact_number': _contactNumberController.text.trim(),
         'address': _addressController.text.trim(),
-        'image_url': "", // Always send an empty string
+        'image_url': imageUrl, // Save the image URL in Firestore
         'created_at': FieldValue.serverTimestamp(),
       });
 
@@ -131,14 +140,57 @@ class _AddEventsState extends State<AddEvents> {
     }
   }
 
+
+
   Future<void> _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
     );
-    if (result != null) {
+
+    if (result != null && result.files.first.bytes != null) {
       setState(() {
-        _image = result.files.first.bytes;
+        _image = result.files.first.bytes; // Store as Uint8List
       });
+      print("Image selected successfully.");
+    } else {
+      print("No image selected.");
+    }
+  }
+
+  Future<String?> _uploadImageToStorage() async {
+    if (_image == null) {
+      print("No image selected for upload.");
+      return null;
+    }
+
+    try {
+      // ✅ Set unique file name
+      String fileName = "events/${DateTime.now().millisecondsSinceEpoch}.jpg";
+      Reference ref = FirebaseStorage.instance.ref().child(fileName);
+
+      // ✅ Upload image with metadata
+      UploadTask uploadTask = ref.putData(
+        _image!,
+        SettableMetadata(contentType: "image/jpeg"),
+      );
+
+      // ✅ Track upload progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        double progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        print("Upload Progress: ${progress.toStringAsFixed(2)}%");
+      });
+
+      // ✅ Wait for completion
+      TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
+
+      // ✅ Get correct URL
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      print("Uploaded Image URL: $downloadUrl");
+
+      return downloadUrl;
+    } catch (e) {
+      print("🔥 Image upload failed: $e");
+      return null;
     }
   }
 

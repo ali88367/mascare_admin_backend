@@ -35,6 +35,9 @@ class Events extends StatelessWidget {
                   var event = snapshot.data!.docs[index];
                   String title = event['title'] ?? "No Title";
                   String date = event['date'] ?? "No Date";
+                  String image_url = event['image_url'] ?? "";
+                  debugPrint("Fetched image URL: $image_url");
+
 
                   // Convert date string to a readable format
                   String formattedDate;
@@ -59,13 +62,38 @@ class Events extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(15),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
+                          child: image_url.isNotEmpty
+                              ? Image.network(
+                            image_url,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return SizedBox(
+                                width: 60,
+                                height: 60,
+                                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint("Error loading image: $error"); // Debugging
+                              return Image.asset(
+                                "assets/images/logo.png",
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                          )
+                              : Image.asset(
                             "assets/images/logo.png",
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
                           ),
                         ),
+
                         title: Text(
                           title,
                           style: const TextStyle(
