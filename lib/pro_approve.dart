@@ -4,61 +4,67 @@ import 'package:mascare_admin_backend/colors.dart';
 
 class ProApprove extends StatelessWidget {
   const ProApprove({super.key});
+  /// **Approve Professional: Show SnackBar and remove user from UI**
+  Future<void> _approveProfessional(String uid, BuildContext context) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Professional approved successfully.")),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBlue,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 700),
-            child: StreamBuilder(
-              stream: FirebaseFirestore.instance.collection('pro_requests').snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return const Center(child: Text("Error fetching data",style: TextStyle(color: orange),));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("No professionals found",style:  TextStyle(color: orange)));
-                }
-
-                List<Map<String, dynamic>> prosList = snapshot.data!.docs.map((doc) {
-                  var data = doc.data() as Map<String, dynamic>;
-
-                  return {
-                    "name": data['user_name'] ?? 'Unknown',
-                    "email": data['email'] ?? 'N/A',
-                    "phone": data['number'] ?? 'N/A',
-                    "experience": "${data['years_of_experience'] ?? '0'} years",
-                    "profile_pic": data['profile_pic'] ?? '',
-                    "address": data['address'] ?? 'N/A',
-                    "care_center_name": data['care_center_name'] ?? 'N/A',
-                    "category": data['category'] ?? 'N/A',
-                    "registration_number": data['registration_number'] ?? 'N/A',
-                    "role": data['role'] ?? 'N/A',
-                    "uid": data['uid'] ?? 'N/A',
-                    "docId": doc.id, // Store document ID for deletion
-                  };
-                }).toList();
-
-                return ListView.builder(
-                  itemCount: prosList.length,
-                  itemBuilder: (context, index) {
-                    return _buildProCard(prosList[index], context);
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-      ),
+      // body: Padding(
+      //   padding: const EdgeInsets.all(16.0),
+      //   child: Center(
+      //     child: ConstrainedBox(
+      //       constraints: const BoxConstraints(maxWidth: 700),
+      //       child: StreamBuilder(
+      //         stream: FirebaseFirestore.instance.collection('pro_requests').snapshots(),
+      //         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+      //           if (snapshot.connectionState == ConnectionState.waiting) {
+      //             return const Center(child: CircularProgressIndicator());
+      //           }
+      //
+      //           if (snapshot.hasError) {
+      //             return const Center(child: Text("Error fetching data",style: TextStyle(color: orange),));
+      //           }
+      //
+      //           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+      //             return const Center(child: Text("No professionals found",style:  TextStyle(color: orange)));
+      //           }
+      //
+      //           List<Map<String, dynamic>> prosList = snapshot.data!.docs.map((doc) {
+      //             var data = doc.data() as Map<String, dynamic>;
+      //
+      //             return {
+      //               "name": data['user_name'] ?? 'Unknown',
+      //               "email": data['email'] ?? 'N/A',
+      //               "phone": data['number'] ?? 'N/A',
+      //               "experience": "${data['years_of_experience'] ?? '0'} years",
+      //               "profile_pic": data['profile_pic'] ?? '',
+      //               "address": data['address'] ?? 'N/A',
+      //               "care_center_name": data['care_center_name'] ?? 'N/A',
+      //               "category": data['category'] ?? 'N/A',
+      //               "registration_number": data['registration_number'] ?? 'N/A',
+      //               "role": data['role'] ?? 'N/A',
+      //               "uid": data['uid'] ?? 'N/A',
+      //               "docId": doc.id, // Store document ID for deletion
+      //             };
+      //           }).toList();
+      //
+      //           return ListView.builder(
+      //             itemCount: prosList.length,
+      //             itemBuilder: (context, index) {
+      //               return _buildProCard(prosList[index], context);
+      //             },
+      //           );
+      //         },
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
   }
 
@@ -109,9 +115,11 @@ class ProApprove extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _approveProfessional(proDetails['uid']),
+                  onPressed: () => _approveProfessional(proDetails['uid'], context),
+
+                  //     onPressed: () => _approveProfessional(proDetails['uid']),
                   icon: const Icon(Icons.check, color: Colors.white),
-                  label: const Text("Approve"),
+                  label: const Text("Approve",style: TextStyle(color: Colors.white),),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -121,7 +129,7 @@ class ProApprove extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: () => _rejectProfessional(proDetails, proDetails['docId'], context),
                   icon: const Icon(Icons.close, color: Colors.white),
-                  label: const Text("Reject"),
+                  label: const Text("Reject",style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -152,15 +160,15 @@ class ProApprove extends StatelessWidget {
   }
 
   /// **Approve Professional: Update the account_approved field in all_users collection**
-  Future<void> _approveProfessional(String uid) async {
-    try {
-      await FirebaseFirestore.instance.collection('all_users').doc(uid).update({
-        "account_approved": true,
-      });
-    } catch (e) {
-      debugPrint("Error approving professional: $e");
-    }
-  }
+  // Future<void> _approveProfessional(String uid) async {
+  //   try {
+  //     await FirebaseFirestore.instance.collection('all_users').doc(uid).update({
+  //       "account_approved": true,
+  //     });
+  //   } catch (e) {
+  //     debugPrint("Error approving professional: $e");
+  //   }
+  // }
 
   /// **Reject Professional: Move to rejected_pros collection and delete from pro_requests**
   Future<void> _rejectProfessional(Map<String, dynamic> proDetails, String docId, BuildContext context) async {

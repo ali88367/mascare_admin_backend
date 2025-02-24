@@ -34,28 +34,10 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
 
   Future<void> addAdvertisement() async {
     if (_formKey.currentState!.validate()) {
-      if (_image == null) {
-        Get.snackbar(
-          "Error",
-          "Please select an image!",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
       try {
-        String fileName = 'advertisements/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        UploadTask uploadTask = _storage.ref(fileName).putData(
-          _image!,
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-
         await _firestore.collection('advertisements').add({
           'title': _titleController.text.trim(),
-          'image_url': downloadUrl,
+          'image_url': "", // Always send an empty string
           'created_at': FieldValue.serverTimestamp(),
         });
 

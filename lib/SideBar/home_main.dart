@@ -1,10 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
 import 'package:mascare_admin_backend/pro_approve.dart';
-
+import '../add_event.dart';
 import '../advertisment.dart';
 import '../bookings.dart';
 import '../events.dart';
@@ -41,7 +40,7 @@ class _HomeMainState extends State<HomeMain> {
                         : sidebarController.selectedindex.value == 1
                         ? ProApprove()
                         : sidebarController.selectedindex.value == 2
-                        ? Bookings()
+                        ? Events()
                         : sidebarController.selectedindex.value == 3
                         ? AddEvents()
                         : sidebarController.selectedindex.value == 4

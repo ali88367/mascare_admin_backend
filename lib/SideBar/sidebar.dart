@@ -110,8 +110,8 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
                 )
                     : SizedBox.shrink()),
                 SizedBox(
-                  height: 80,
-                  width: 220,
+                  height: 200,
+                  width: 200,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset('assets/images/logo.png'),
@@ -134,12 +134,12 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 2,
               icon: Icons.book,
-              label: 'Bookings',
+              label: 'Events',
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 3,
               icon: Icons.event,
-              label: 'Events',
+              label: 'Add Events',
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 4,
