@@ -7,7 +7,6 @@ import '../add_event.dart';
 import '../advertisment.dart';
 import '../bookings.dart';
 import '../events.dart';
-import '../services.dart';
 import '../user_details.dart';
 
 class HomeMain extends StatefulWidget {
@@ -46,7 +45,7 @@ class _HomeMainState extends State<HomeMain> {
                         : sidebarController.selectedindex.value == 4
                         ? AddAdvertisement()
                         : sidebarController.selectedindex.value == 5
-                        ? Services()
+                        ? Bookings()
                         : UserDetails()))
               ],
             ),
