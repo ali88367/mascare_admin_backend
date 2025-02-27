@@ -1,286 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'SideBar/sidebar_controller.dart';
 import 'colors.dart';
+import 'SideBar/sidebar_controller.dart';
+import 'user_details_controller.dart'; // Import the controller
 import 'widgets/custom_button.dart';
 
-class UserDetails extends StatefulWidget {
+class UserDetails extends StatelessWidget {
   const UserDetails({Key? key}) : super(key: key);
-
-  @override
-  State<UserDetails> createState() => _UserDetailsState();
-}
-
-class _UserDetailsState extends State<UserDetails> {
-  final SidebarController sidebarController = Get.put(SidebarController());
-  String searchQuery = '';
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  List<Map<String, dynamic>> usersData = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUsers();
-  }
-
-  Future<void> _fetchUsers() async {
-    try {
-      QuerySnapshot querySnapshot = await _firestore.collection('all_users').get();
-      setState(() {
-        usersData = querySnapshot.docs.map((doc) {
-          return {
-            'uid': doc.id,
-            'email': doc['email'] as String? ?? '',
-            'role': doc['role'] as String? ?? '',
-            'name': doc['user_name'] as String? ?? '',
-            'number': doc['number'] as String? ?? '', // Make sure this exists in the document
-          };
-        }).toList();
-      });
-    } catch (e) {
-      print("Error fetching users: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch users: $e')),
-      );
-    }
-  }
-
-
-  Future<void> _deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
-    bool? shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to permanently delete this user? This action is irreversible.'),
-          actions: [
-            CustomButton(
-              color: Colors.transparent,
-              width: 100,
-              height: 40,
-              text: 'Cancel',
-              textColor: Colors.red,
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            CustomButton(
-              width: 100,
-              height: 40,
-              text: 'Delete',
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldDelete == true) {
-      try {
-        // Delete user from Firebase Authentication
-        List<String> providers = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email!);
-        if (providers.isNotEmpty) {
-          try {
-            List<String> signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email!);
-
-            if (signInMethods.contains(EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD)) {
-              // Find the user by email and password, then delete
-              try {
-                List<UserInfo> userInfos = FirebaseAuth.instance.currentUser!.providerData;
-                for (var userInfo in userInfos) {
-                  if (userInfo.providerId == EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD) {
-                    User? user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      await user.delete();
-                    }
-                    break;
-                  }
-                }
-              } catch (e) {
-                print("Error deleting user from Firebase Auth: $e");
-                // Handle the exception.  If deletion fails, show a snackbar message.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to delete user from Authentication: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
-          } catch (e) {
-            print("Error fetching sign-in methods: $e");
-            // Handle the exception, possibly showing a snackbar message to the user.
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to fetch sign-in methods: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
-
-        // Delete user document from Firestore
-        await _firestore.collection('all_users').doc(userId).delete();
-
-        // Optionally, delete related data in other collections (e.g., services)
-        // Replace 'services' with the actual collection name if needed
-        try{
-          await _firestore.collection('services').doc(userId).delete();
-        }catch(e){
-          print('no service doc exists');
-        }
-
-
-        // Remove user from signup records
-        DocumentReference signupRecordsRef = _firestore.collection('records').doc('signup_records');
-        DocumentSnapshot snapshot = await signupRecordsRef.get();
-
-        if (snapshot.exists) {
-          Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-
-          List<dynamic> emails = List.from(data['emails'] ?? []);
-          List<dynamic> usernames = List.from(data['user_names'] ?? []);
-          List<dynamic> phoneNumbers = List.from(data['numbers'] ?? []);
-
-          emails.remove(email);
-          usernames.remove(username);
-          phoneNumbers.remove(phoneNumber);
-
-          await signupRecordsRef.update({
-            'emails': emails,
-            'user_names': usernames,
-            'numbers': phoneNumbers,
-          });
-        }
-
-
-        setState(() {
-          usersData.removeWhere((user) => user['uid'] == userId);
-        });
-
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User deleted successfully')),
-        );
-      } catch (e) {
-        print("Error deleting user: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete user: $e')),
-        );
-      }
-    }
-  }
-
-
-  //Edit User function
-  Future<void> _editUser(
-      String userId, String currentName, String currentEmail, String currentRole) async {
-    String updatedName = currentName;
-    String updatedEmail = currentEmail;
-    String selectedRole = (['Admin', 'User', 'Guest'].contains(currentRole)) ? currentRole : 'User';
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit User'),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return SizedBox(
-                height: 200,
-                width: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      initialValue: currentName,
-                      decoration: const InputDecoration(hintText: 'Name'),
-                      onChanged: (value) => updatedName = value,
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      initialValue: currentEmail,
-                      decoration: const InputDecoration(hintText: 'Email'),
-                      onChanged: (value) => updatedEmail = value,
-                    ),
-                    const SizedBox(height: 20),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(),
-                      ),
-                      value: selectedRole,
-                      onChanged: (String? newValue) {
-                        setDialogState(() {
-                          selectedRole = newValue ?? 'User';
-                        });
-                      },
-                      items: <String>['Admin', 'User', 'Pro']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          actions: [
-            CustomButton(
-              color: Colors.transparent,
-              width: 100,
-              height: 40,
-              text: 'Cancel',
-              textColor: Colors.red,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            CustomButton(
-              width: 100,
-              height: 40,
-              text: 'Update',
-              onPressed: () async {
-                try {
-                  await _firestore.collection('all_users').doc(userId).update({
-                    'user_name': updatedName,
-                    'email': updatedEmail,
-                    'role': selectedRole,
-                  });
-
-                  setState(() {
-                    final index = usersData.indexWhere((user) => user['uid'] == userId);
-                    if (index != -1) {
-                      usersData[index]['user_name'] = updatedName;
-                      usersData[index]['email'] = updatedEmail;
-                      usersData[index]['role'] = selectedRole;
-                    }
-                  });
-
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('User updated successfully')),
-                  );
-                } catch (e) {
-                  print("Error updating user: $e");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update user: $e')),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final UserController userController = Get.put(UserController()); // Initialize controller
+    final SidebarController sidebarController = Get.find<SidebarController>();
 
     return Scaffold(
       backgroundColor: darkBlue,
@@ -306,7 +39,7 @@ class _UserDetailsState extends State<UserDetails> {
                 width: width < 768 ? 350 : 500,
                 child: TextField(
                   onChanged: (value) {
-                    setState(() => searchQuery = value.toLowerCase());
+                    userController.searchQuery.value = value.toLowerCase();
                   },
                   decoration: const InputDecoration(
                     hintText: 'Search',
@@ -352,13 +85,10 @@ class _UserDetailsState extends State<UserDetails> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: usersData.length,
+              child: Obx(() => ListView.builder(
+                itemCount: userController.filteredUsers.length,
                 itemBuilder: (context, index) {
-                  final user = usersData[index];
-                  if (!user['name'].toString().toLowerCase().contains(searchQuery)) {
-                    return const SizedBox.shrink();
-                  }
+                  final user = userController.filteredUsers[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
@@ -411,7 +141,7 @@ class _UserDetailsState extends State<UserDetails> {
                                 //   color: orange,
                                 // ),
                                 IconButton(
-                                  onPressed: () => _deleteUser(
+                                  onPressed: () => userController.deleteUser(
                                     user['uid'],
                                     user['email'],
                                     user['name'],
@@ -432,7 +162,7 @@ class _UserDetailsState extends State<UserDetails> {
                     ),
                   );
                 },
-              ),
+              )),
             ),
           ],
         ),

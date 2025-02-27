@@ -66,7 +66,7 @@ class ProApprove extends StatelessWidget {
                     "registration_number": data['registration_number'] ?? 'N/A',
                     "role": data['role'] ?? 'N/A',
                     "uid": data['uid'] ?? 'N/A',
-                    "docId": doc.id, // Store document ID for deletion
+                    "docId": doc.id,
                   };
                 }).toList();
 

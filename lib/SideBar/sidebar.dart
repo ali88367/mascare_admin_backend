@@ -152,6 +152,11 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
               label: 'Bookings',
             ),
             SidebarXItem(
+              onTap: () => sidebarController.selectedindex.value = 6,
+              icon: Icons.design_services_rounded,
+              label: 'Services',
+            ),
+            SidebarXItem(
               onTap: () {
                 sidebarController.selectedindex.value = 0;
                 sidebarController.controller = SidebarXController(selectedIndex: 0, extended: true);
