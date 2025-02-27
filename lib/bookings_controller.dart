@@ -5,8 +5,31 @@ class BookingsController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final RxList<Map<String, dynamic>> _allBookings = <Map<String, dynamic>>[].obs;
   final RxBool isLoading = true.obs;
+  final RxString searchQuery = ''.obs;
+  final RxString selectedStatus = 'all'.obs;
 
   List<Map<String, dynamic>> get allBookings => _allBookings.value;
+
+  List<Map<String, dynamic>> get filteredBookings {
+    List<Map<String, dynamic>> filteredList = List.from(allBookings); // Create a copy
+
+    // Apply Status Filter
+    if (selectedStatus.value != 'all') {
+      filteredList = filteredList.where((booking) => booking['status']?.toLowerCase() == selectedStatus.value).toList();
+    }
+
+    // Apply Search Filter
+    if (searchQuery.isNotEmpty) {
+      filteredList = filteredList.where((booking) {
+        final category = booking['category']?.toString().toLowerCase() ?? '';
+        final note = booking['note']?.toString().toLowerCase() ?? '';
+        final serviceProvider = booking['service_provider']?.toString().toLowerCase() ?? '';
+        return category.contains(searchQuery.value) || note.contains(searchQuery.value) || serviceProvider.contains(searchQuery.value);
+      }).toList();
+    }
+
+    return filteredList;
+  }
 
   @override
   void onInit() {
@@ -69,5 +92,13 @@ class BookingsController extends GetxController {
       print("Error deleting booking: $e");
       Get.snackbar('Error', 'Failed to delete booking: $e', snackPosition: SnackPosition.BOTTOM);
     }
+  }
+
+  void setSearchQuery(String query) {
+    searchQuery.value = query.toLowerCase();
+  }
+
+  void setSelectedStatus(String status) {
+    selectedStatus.value = status;
   }
 }

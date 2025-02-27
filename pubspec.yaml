@@ -45,6 +45,7 @@ dependencies:
   firebase_auth_web:
   file_picker:
   intl:
+  infinite_scroll_pagination:
 
 
 dev_dependencies:

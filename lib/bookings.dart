@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/colors.dart';
-import 'bookings_controller.dart'; // Import the controller
+import 'bookings_controller.dart';
 
 class Bookings extends StatelessWidget {
   const Bookings({Key? key}) : super(key: key);
@@ -13,32 +13,115 @@ class Bookings extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: darkBlue,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 700),
-          child: Obx(() {
-            if (bookingsController.isLoading.value) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (bookingsController.allBookings.isEmpty) {
-              return const Center(
-                child: Text(
-                  'No Bookings Yet!',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Search Bar
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search Bookings...',
+                prefixIcon: const Icon(Icons.search, color: orange),
+                fillColor: Colors.white,
+                filled: true,
+                border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
+                hintStyle: const TextStyle(color: orange),
+              ),
+              onChanged: bookingsController.setSearchQuery,
+            ),
+            const SizedBox(height: 16),
+
+            // Filter Buttons
+            Obx(() => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                  onPressed: () => bookingsController.setSelectedStatus('all'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8), // Add radius here
+                      ),
+                    ),
+                  ),
+                  child: const Text('All', style: TextStyle(color: Colors.white)),
                 ),
-              );
-            } else {
-              return ListView.builder(
-                itemCount: bookingsController.allBookings.length,
-                itemBuilder: (context, index) {
-                  final booking = bookingsController.allBookings[index];
-                  return BookingCard(
-                    booking: booking,
-                    onDelete: () => bookingsController.deleteBooking(booking['id']!, booking['userId']!),
+                ElevatedButton(
+                  onPressed: () => bookingsController.setSelectedStatus('upcoming'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8), // Add radius here
+                      ),
+                    ),
+                  ),
+                  child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
+                ),
+                ElevatedButton(
+                  onPressed: () => bookingsController.setSelectedStatus('completed'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8), // Add radius here
+                      ),
+                    ),
+                  ),
+                  child: const Text('Completed', style: TextStyle(color: Colors.white)),
+                ),
+                ElevatedButton(
+                  onPressed: () => bookingsController.setSelectedStatus('cancelled'),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8), // Add radius here
+                      ),
+                    ),
+                  ),
+                  child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            )),
+            const SizedBox(height: 16),
+
+            // Booking List
+            Expanded(
+              child: Obx(() {
+                if (bookingsController.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (bookingsController.filteredBookings.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No Bookings Found!',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   );
-                },
-              );
-            }
-          }),
+                } else {
+                  return ListView.builder(
+                    itemCount: bookingsController.filteredBookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookingsController.filteredBookings[index];
+                      return BookingCard(
+                        booking: booking,
+                        onDelete: () => bookingsController.deleteBooking(booking['id']!, booking['userId']!),
+                      );
+                    },
+                  );
+                }
+              }),
+            ),
+          ],
         ),
       ),
     );
@@ -133,19 +216,18 @@ class BookingCard extends StatelessWidget {
               Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: darkBlue,
                       borderRadius: BorderRadius.circular(5),
                     ),
-                    child: const Text(
-                      'Status',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                    child:  Text(
+                      booking['status']?.toString() ?? '0',                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
                     ),
                   ),
                   const SizedBox(height: 28),
                   Text(
-                    booking['status']?.toString() ?? '0',
+                    'User Name',
                     style: const TextStyle(fontWeight: FontWeight.w500, color: darkBlue, fontSize: 12),
                   ),
                 ],
