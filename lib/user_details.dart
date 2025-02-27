@@ -18,7 +18,7 @@ class _UserDetailsState extends State<UserDetails> {
   final SidebarController sidebarController = Get.put(SidebarController());
   String searchQuery = '';
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  List<Map<String, dynamic>> usersData = []; // Ensure this is initialized properly
+  List<Map<String, dynamic>> usersData = [];
 
   @override
   void initState() {
@@ -36,6 +36,7 @@ class _UserDetailsState extends State<UserDetails> {
             'email': doc['email'] as String? ?? '',
             'role': doc['role'] as String? ?? '',
             'name': doc['user_name'] as String? ?? '',
+            'number': doc['number'] as String? ?? '', // Make sure this exists in the document
           };
         }).toList();
       });
@@ -48,14 +49,13 @@ class _UserDetailsState extends State<UserDetails> {
   }
 
 
-
   Future<void> _deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
     bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to delete this user?'),
+          content: const Text('Are you sure you want to permanently delete this user? This action is irreversible.'),
           actions: [
             CustomButton(
               color: Colors.transparent,
@@ -78,33 +78,61 @@ class _UserDetailsState extends State<UserDetails> {
 
     if (shouldDelete == true) {
       try {
-        // Update Firestore user record
-        await _firestore.collection('all_users').doc(userId).update({
-          'user_name': 'Deleted User',
-          'number': '0000000',
-          'is_deleted': true, // Mark as deleted
-        });
+        // Delete user from Firebase Authentication
+        List<String> providers = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email!);
+        if (providers.isNotEmpty) {
+          try {
+            List<String> signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email!);
 
-        await _firestore.collection('services').doc(userId).update({
-          'availability': true,
-        });
-
-        setState(() {
-          for (var user in usersData) {
-            if (user['uid'] == userId) {
-              user['name'] = 'Deleted User';
-              user['number'] = '0000000';
-              user['is_deleted'] = true;
-              break;
+            if (signInMethods.contains(EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD)) {
+              // Find the user by email and password, then delete
+              try {
+                List<UserInfo> userInfos = FirebaseAuth.instance.currentUser!.providerData;
+                for (var userInfo in userInfos) {
+                  if (userInfo.providerId == EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD) {
+                    User? user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      await user.delete();
+                    }
+                    break;
+                  }
+                }
+              } catch (e) {
+                print("Error deleting user from Firebase Auth: $e");
+                // Handle the exception.  If deletion fails, show a snackbar message.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete user from Authentication: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
+          } catch (e) {
+            print("Error fetching sign-in methods: $e");
+            // Handle the exception, possibly showing a snackbar message to the user.
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to fetch sign-in methods: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
-        });
+        }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User marked as deleted')),
-        );
+        // Delete user document from Firestore
+        await _firestore.collection('all_users').doc(userId).delete();
 
-        // Remove user data from signup records
+        // Optionally, delete related data in other collections (e.g., services)
+        // Replace 'services' with the actual collection name if needed
+        try{
+          await _firestore.collection('services').doc(userId).delete();
+        }catch(e){
+          print('no service doc exists');
+        }
+
+
+        // Remove user from signup records
         DocumentReference signupRecordsRef = _firestore.collection('records').doc('signup_records');
         DocumentSnapshot snapshot = await signupRecordsRef.get();
 
@@ -126,13 +154,11 @@ class _UserDetailsState extends State<UserDetails> {
           });
         }
 
-        // Delete user from Firebase Authentication (only works if the user is signed in)
-        User? user = FirebaseAuth.instance.currentUser;
-        if (user != null && user.uid == userId) {
-          await user.delete();
-        } else {
-          print("Cannot delete user from Firebase Auth: User must be signed in.");
-        }
+
+        setState(() {
+          usersData.removeWhere((user) => user['uid'] == userId);
+        });
+
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User deleted successfully')),
@@ -147,6 +173,7 @@ class _UserDetailsState extends State<UserDetails> {
   }
 
 
+  //Edit User function
   Future<void> _editUser(
       String userId, String currentName, String currentEmail, String currentRole) async {
     String updatedName = currentName;
@@ -251,7 +278,6 @@ class _UserDetailsState extends State<UserDetails> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -321,7 +347,7 @@ class _UserDetailsState extends State<UserDetails> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 80),
+                  const SizedBox(width: 35),
                 ],
               ),
             ),
@@ -374,25 +400,23 @@ class _UserDetailsState extends State<UserDetails> {
                             ),
                             Row(
                               children: [
-                                IconButton(
-                                  onPressed: () => _deleteUser(
-                                    user['uid'] ?? '',
-                                    user['email'] ?? '',
-                                    user['user_name'] ?? '',
-                                    user['phone_number'] ?? '',
-                                  ),
-
-                                  icon: const Icon(Icons.edit),
-                                  color: orange,
-                                ),
+                                // IconButton(
+                                //   onPressed: () => _editUser(
+                                //     user['uid'] ?? '',
+                                //     user['name'] ?? '',
+                                //     user['email'] ?? '',
+                                //     user['role'] ?? '',
+                                //   ),
+                                //   icon: const Icon(Icons.edit),
+                                //   color: orange,
+                                // ),
                                 IconButton(
                                   onPressed: () => _deleteUser(
                                     user['uid'],
                                     user['email'],
-                                    user['user_name'],
-                                    user['phone_number'],
+                                    user['name'],
+                                    user['number'],
                                   ),
-
                                   icon: const Icon(Icons.delete),
                                   color: Colors.red,
                                 ),

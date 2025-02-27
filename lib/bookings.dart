@@ -40,6 +40,7 @@ class _BookingsState extends State<Bookings> {
 
               var bookingsData = snapshot.data!.docs.map((doc) {
                 var booking = {
+                  'id': doc.id, // Add the document ID to the booking data
                   'service_provider': doc['service_provider']?.toString() ?? 'N/A',
                   'category': doc['category']?.toString() ?? 'N/A',
                   'amount': doc['amount'] != null ? doc['amount'].toString() : 'N/A', // Convert int/null to String
@@ -60,7 +61,10 @@ class _BookingsState extends State<Bookings> {
               return ListView.builder(
                 itemCount: bookingsData.length,
                 itemBuilder: (context, index) {
-                  return BookingCard(booking: bookingsData[index]);
+                  return BookingCard(
+                    booking: bookingsData[index],
+                    onDelete: () => _deleteBooking(bookingsData[index]['id']!),
+                  );
                 },
               );
             },
@@ -69,11 +73,27 @@ class _BookingsState extends State<Bookings> {
       ),
     );
   }
+
+  // Method to delete a booking
+  Future<void> _deleteBooking(String bookingId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(userId)
+          .collection('user_bookings')
+          .doc(bookingId)
+          .delete();
+      print("Booking deleted successfully!");
+    } catch (e) {
+      print("Error deleting booking: $e");
+    }
+  }
 }
 
 class BookingCard extends StatelessWidget {
   final Map<String, dynamic> booking;
-  const BookingCard({super.key, required this.booking});
+  final VoidCallback onDelete;
+  const BookingCard({super.key, required this.booking, required this.onDelete});
 
   Future<String> getServiceProviderName(String providerId) async {
     try {
@@ -175,6 +195,10 @@ class BookingCard extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.w500, color: darkBlue, fontSize: 12),
                   ),
                 ],
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.red),
+                onPressed: onDelete,
               ),
             ],
           ),
