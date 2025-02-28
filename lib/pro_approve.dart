@@ -16,22 +16,25 @@ class _ProApproveState extends State<ProApprove> {
 
   /// **Approve Professional: Show SnackBar and remove user from UI**
   Future<void> _approveProfessional(String uid, String docId, BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context); // Capture the ScaffoldMessengerState
+
     try {
       // Update the account_approved field in the all_users collection
       await FirebaseFirestore.instance.collection('all_users').doc(uid).update({
         "account_approved": true,
+        "disapprove_reason": ""
       });
 
       // Remove the professional from the pro_requests collection
       await FirebaseFirestore.instance.collection('pro_requests').doc(docId).delete();
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
+      // Show success message using the captured messenger
+      messenger.showSnackBar(
         const SnackBar(content: Text("Professional approved successfully.")),
       );
     } catch (e) {
       debugPrint("Error approving professional: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar( // Use the captured messenger
         const SnackBar(content: Text("Error approving professional. Please try again.")),
       );
     }
@@ -102,7 +105,9 @@ class _ProApproveState extends State<ProApprove> {
                         return ListView.builder(
                           itemCount: prosList.length,
                           itemBuilder: (context, index) {
-                            return _buildProCard(prosList[index], context);
+                            final proDetails = prosList[index];
+                            print("Professional Details: $proDetails"); // ADDED PRINT STATEMENT HERE
+                            return _buildProCard(proDetails, context);
                           },
                         );
                       },

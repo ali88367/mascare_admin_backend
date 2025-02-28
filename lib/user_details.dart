@@ -89,6 +89,8 @@ class UserDetails extends StatelessWidget {
                 itemCount: userController.filteredUsers.length,
                 itemBuilder: (context, index) {
                   final user = userController.filteredUsers[index];
+              //    print("User Data: $user"); // ADDED: Print the user data here
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
