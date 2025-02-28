@@ -7,6 +7,7 @@ import '../add_event.dart';
 import '../advertisment.dart';
 import '../bookings.dart';
 import '../events.dart';
+import '../reports.dart';
 import '../services.dart';
 import '../user_details.dart';
 
@@ -49,6 +50,9 @@ class _HomeMainState extends State<HomeMain> {
                         ? Bookings()
                         : sidebarController.selectedindex.value == 6
                         ? Services()
+                        : sidebarController.selectedindex.value == 7
+                        ? Reports()
+
                         : UserDetails()))
               ],
             ),
