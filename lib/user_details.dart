@@ -31,7 +31,7 @@ class UserDetails extends StatelessWidget {
                 },
                 child: const Padding(
                     padding: EdgeInsets.only(left: 10, top: 10),
-                    child: Icon(Icons.menu)))
+                    child: Icon(Icons.menu,color: Colors.white,)))
                 : const SizedBox.shrink(),
             const SizedBox(height: 20),
             Center(

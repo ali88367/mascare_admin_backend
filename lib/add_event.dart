@@ -8,18 +8,18 @@ import 'package:intl/intl.dart'; // Import this for DateFormat
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:mascare_admin_backend/widgets/custom_button.dart';
 
-import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'SideBar/sidebar_controller.dart';
 
 class AddEvents extends StatefulWidget {
-  AddEvents({super.key});
+  AddEvents({Key? key}) : super(key: key);
 
   @override
   State<AddEvents> createState() => _AddEventsState();
 }
 
 class _AddEventsState extends State<AddEvents> {
+  final SidebarController sidebarController = Get.find<SidebarController>();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -31,8 +31,7 @@ class _AddEventsState extends State<AddEvents> {
   final TextEditingController _fromTimeController = TextEditingController();
   final TextEditingController _toTimeController = TextEditingController();
   final TextEditingController _ticketPriceController = TextEditingController();
-  final TextEditingController _contactNumberController =
-  TextEditingController();
+  final TextEditingController _contactNumberController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
   Future<void> _pickDate() async {
@@ -82,7 +81,7 @@ class _AddEventsState extends State<AddEvents> {
         _ticketPriceController.text.isEmpty ||
         _contactNumberController.text.isEmpty ||
         _addressController.text.isEmpty ||
-        _image == null) { // Ensure image is selected
+        _image == null) {
       Get.snackbar(
         "Error",
         "All fields are required, including an image!",
@@ -93,10 +92,8 @@ class _AddEventsState extends State<AddEvents> {
     }
 
     try {
-      // Upload image to Firebase Storage
       String? imageUrl = await _uploadImageToStorage();
 
-      // Store event data in Firestore
       await _firestore.collection('events').add({
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
@@ -107,7 +104,7 @@ class _AddEventsState extends State<AddEvents> {
         'ticket_price': _ticketPriceController.text.trim(),
         'contact_number': _contactNumberController.text.trim(),
         'address': _addressController.text.trim(),
-        'image_url': imageUrl, // Save the image URL in Firestore
+        'image_url': imageUrl,
         'created_at': FieldValue.serverTimestamp(),
       });
 
@@ -140,8 +137,6 @@ class _AddEventsState extends State<AddEvents> {
     }
   }
 
-
-
   Future<void> _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -149,7 +144,7 @@ class _AddEventsState extends State<AddEvents> {
 
     if (result != null && result.files.first.bytes != null) {
       setState(() {
-        _image = result.files.first.bytes; // Store as Uint8List
+        _image = result.files.first.bytes;
       });
       print("Image selected successfully.");
     } else {
@@ -164,26 +159,21 @@ class _AddEventsState extends State<AddEvents> {
     }
 
     try {
-      // ✅ Set unique file name
       String fileName = "events/${DateTime.now().millisecondsSinceEpoch}.jpg";
       Reference ref = FirebaseStorage.instance.ref().child(fileName);
 
-      // ✅ Upload image with metadata
       UploadTask uploadTask = ref.putData(
         _image!,
         SettableMetadata(contentType: "image/jpeg"),
       );
 
-      // ✅ Track upload progress
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         double progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         print("Upload Progress: ${progress.toStringAsFixed(2)}%");
       });
 
-      // ✅ Wait for completion
       TaskSnapshot snapshot = await uploadTask.whenComplete(() {});
 
-      // ✅ Get correct URL
       String downloadUrl = await snapshot.ref.getDownloadURL();
       print("Uploaded Image URL: $downloadUrl");
 
@@ -196,154 +186,172 @@ class _AddEventsState extends State<AddEvents> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: darkBlue,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 700),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 200,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey[300],
-                      ),
-                      child: _image == null
-                          ? Icon(Icons.image, size: 40, color: Colors.grey)
-                          : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.memory(
-                          _image!,
-                          fit: BoxFit.cover,
-                        ),
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: width < 768 ? 20 : 60,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Get.width < 768
+                ? GestureDetector(
+                onTap: () {
+                  sidebarController.showsidebar.value = true;
+
+                },
+                child: const Padding(
+                    padding: EdgeInsets.only(left: 10, top: 10),
+                    child: Icon(Icons.menu, color: Colors.white,))) // Ensure the icon is visible
+                : const SizedBox.shrink(),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 700),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.grey[300],
+                              ),
+                              child: _image == null
+                                  ? const Icon(Icons.image, size: 40, color: Colors.grey)
+                                  : ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.memory(
+                                  _image!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildInputField("Enter Title", _titleController),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: _buildInputField("Ticket Price", _ticketPriceController, isNumber: true),
+                              )
+                            ],
+                          ),
+                          _buildInputField("Enter Description", _descriptionController, maxLines: 5),
+                          _buildInputField("Organizer Name", _organizerController),
+                          _buildDatePickerField("Event Date", _dateController, _pickDate),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTimePickerField("From Time", _fromTimeController, () => _pickTime(_fromTimeController)),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: _buildTimePickerField("To Time", _toTimeController, () => _pickTime(_toTimeController)),
+                              ),
+                            ],
+                          ),
+                          _buildInputField("Contact Number", _contactNumberController, isNumber: true),
+                          _buildInputField("Address", _addressController, maxLines: 3),
+                          const SizedBox(height: 30),
+                          CustomButton(
+                              text: 'Add Event',
+                              onPressed: addEvent,
+                              color: orange,
+                              height: 50,
+                              width: 700),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInputField("Enter Title", _titleController),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: _buildInputField(
-                            "Ticket Price", _ticketPriceController,
-                            isNumber: true),
-                      )
-                    ],
-                  ),
-                  _buildInputField("Enter Description", _descriptionController,
-                      maxLines: 5),
-                  _buildInputField("Organizer Name", _organizerController),
-                  _buildDatePickerField("Event Date", _dateController, _pickDate),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTimePickerField(
-                            "From Time", _fromTimeController, () => _pickTime(_fromTimeController)),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: _buildTimePickerField(
-                            "To Time", _toTimeController, () => _pickTime(_toTimeController)),
-                      ),
-                    ],
-                  ),
-                  _buildInputField("Contact Number", _contactNumberController,
-                      isNumber: true),
-                  _buildInputField("Address", _addressController, maxLines: 3),
-                  SizedBox(height: 30),
-                  CustomButton(
-                      text: 'Add Event',
-                      onPressed: addEvent,
-                      color: orange,
-                      height: 50,
-                      width: 700),
-                ],
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(String label, TextEditingController controller, {bool isNumber = false, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        maxLines: maxLines,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: orange),
           ),
         ),
       ),
     );
   }
-}
 
-Widget _buildInputField(String label, TextEditingController controller,
-    {bool isNumber = false, int maxLines = 1}) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: TextField(
-      controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      maxLines: maxLines,
-      style: TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: orange),
+  Widget _buildDatePickerField(String label, TextEditingController controller, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        onTap: onTap,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: orange),
+          ),
+          suffixIcon: const Icon(Icons.calendar_today, color: Colors.white),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildDatePickerField(String label, TextEditingController controller, VoidCallback onTap) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: TextField(
-      controller: controller,
-      readOnly: true, // Prevent manual input
-      onTap: onTap, // Open date picker when tapped
-      style: TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
+  Widget _buildTimePickerField(String label, TextEditingController controller, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        onTap: onTap,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: orange),
+          ),
+          suffixIcon: const Icon(Icons.access_time, color: Colors.white),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: orange),
-        ),
-        suffixIcon: Icon(Icons.calendar_today, color: Colors.white),
       ),
-    ),
-  );
-}
-
-Widget _buildTimePickerField(String label, TextEditingController controller, VoidCallback onTap) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: TextField(
-      controller: controller,
-      readOnly: true, // Prevent manual input
-      onTap: onTap, // Open time picker when tapped
-      style: TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: orange),
-        ),
-        suffixIcon: Icon(Icons.access_time, color: Colors.white),
-      ),
-    ),
-  );
+    );
+  }
 }
