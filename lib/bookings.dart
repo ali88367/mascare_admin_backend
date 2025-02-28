@@ -42,115 +42,121 @@ class _BookingsState extends State<Bookings> {
                 : const SizedBox.shrink(),
 
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // Search Bar
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search Bookings...',
-                        prefixIcon: const Icon(Icons.search, color: orange),
-                        fillColor: Colors.white,
-                        filled: true,
-                        border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
-                        hintStyle: const TextStyle(color: orange),
-                      ),
-                      onChanged: bookingsController.setSearchQuery,
-                    ),
-                    const SizedBox(height: 16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
 
-                    // Filter Buttons
-                    Obx(() => Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
                       children: [
-                        ElevatedButton(
-                          onPressed: () => bookingsController.setSelectedStatus('all'),
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
-                            ),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Add radius here
-                              ),
-                            ),
+                        // Search Bar
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Search Bookings...',
+                            prefixIcon: const Icon(Icons.search, color: orange),
+                            fillColor: Colors.white,
+                            filled: true,
+                            border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
+                            hintStyle: const TextStyle(color: orange),
                           ),
-                          child: const Text('All', style: TextStyle(color: Colors.white)),
+                          onChanged: bookingsController.setSearchQuery,
                         ),
-                        ElevatedButton(
-                          onPressed: () => bookingsController.setSelectedStatus('upcoming'),
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
-                            ),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Add radius here
+                        const SizedBox(height: 16),
+
+                        // Filter Buttons
+                        Obx(() => Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => bookingsController.setSelectedStatus('all'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(
+                                  bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
+                                ),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                                  ),
+                                ),
                               ),
+                              child: const Text('All', style: TextStyle(color: Colors.white)),
                             ),
-                          ),
-                          child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => bookingsController.setSelectedStatus('completed'),
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
-                            ),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Add radius here
+                            ElevatedButton(
+                              onPressed: () => bookingsController.setSelectedStatus('upcoming'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(
+                                  bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
+                                ),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                                  ),
+                                ),
                               ),
+                              child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
                             ),
-                          ),
-                          child: const Text('Completed', style: TextStyle(color: Colors.white)),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => bookingsController.setSelectedStatus('cancelled'),
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
-                            ),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8), // Add radius here
+                            ElevatedButton(
+                              onPressed: () => bookingsController.setSelectedStatus('completed'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(
+                                  bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
+                                ),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                                  ),
+                                ),
                               ),
+                              child: const Text('Completed', style: TextStyle(color: Colors.white)),
                             ),
-                          ),
-                          child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
+                            ElevatedButton(
+                              onPressed: () => bookingsController.setSelectedStatus('cancelled'),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(
+                                  bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
+                                ),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                                  ),
+                                ),
+                              ),
+                              child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        )),
+                        const SizedBox(height: 16),
+
+                        // Booking List
+                        Expanded(
+                          child: Obx(() {
+                            if (bookingsController.isLoading.value) {
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (bookingsController.filteredBookings.isEmpty) {
+                              return const Center(
+                                child: Text(
+                                  'No Bookings Found!',
+                                  style: TextStyle(color: Colors.white, fontSize: 16),
+                                ),
+                              );
+                            } else {
+                              return ListView.builder(
+                                itemCount: bookingsController.filteredBookings.length,
+                                itemBuilder: (context, index) {
+                                  final booking = bookingsController.filteredBookings[index];
+                                  return BookingCard(
+                                    booking: booking,
+                                    onDelete: () => bookingsController.deleteBooking(booking['id']!, booking['userId']!),
+                                  );
+                                },
+                              );
+                            }
+                          }),
                         ),
                       ],
-                    )),
-                    const SizedBox(height: 16),
-
-                    // Booking List
-                    Expanded(
-                      child: Obx(() {
-                        if (bookingsController.isLoading.value) {
-                          return const Center(child: CircularProgressIndicator());
-                        } else if (bookingsController.filteredBookings.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'No Bookings Found!',
-                              style: TextStyle(color: Colors.white, fontSize: 16),
-                            ),
-                          );
-                        } else {
-                          return ListView.builder(
-                            itemCount: bookingsController.filteredBookings.length,
-                            itemBuilder: (context, index) {
-                              final booking = bookingsController.filteredBookings[index];
-                              return BookingCard(
-                                booking: booking,
-                                onDelete: () => bookingsController.deleteBooking(booking['id']!, booking['userId']!),
-                              );
-                            },
-                          );
-                        }
-                      }),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -182,154 +188,160 @@ class BookingCard extends StatelessWidget {
     return 'Unknown Provider';
   }
 
+  Future<String> getCustomerName(String customerId) async {
+    try {
+      DocumentSnapshot customerDoc = await FirebaseFirestore.instance
+          .collection('all_users')
+          .doc(customerId)
+          .get();
+
+      if (customerDoc.exists) {
+        return customerDoc['user_name'] ?? 'Unknown Customer';
+      }
+    } catch (e) {
+      print('Error fetching customer name: $e');
+    }
+    return 'Unknown Customer';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(11),
-      margin: const EdgeInsets.symmetric(vertical: 15),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 0),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                height: 75,
-                width: 119,
-                child: Image.asset('assets/images/logo.png'),
-              ),
-              const SizedBox(width: 19),
+              // Service Provider & Category
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.person, color: Colors.grey, size: 18),
-                      const SizedBox(width: 5),
-                      FutureBuilder<String>(
-                        future: getServiceProviderName(booking['service_provider'] ?? ''),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Text(
-                              'Fetching...',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.grey),
-                            );
-                          }
-                          return Text(
-                            snapshot.data ?? 'Unknown Provider',
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.grey),
-                          );
-                        },
-                      ),
-                    ],
+                  FutureBuilder<String>(
+                    future: getServiceProviderName(booking['service_provider'] ?? ''),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Text(
+                          'Fetching Provider...',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey),
+                        );
+                      }
+                      return Text(
+                        snapshot.data ?? 'Unknown Provider',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     booking['category']?.toString() ?? 'N/A',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    booking['amount']?.toString() ?? '0',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: darkBlue, fontSize: 15),
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
                 ],
               ),
-              const Spacer(),
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: darkBlue,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      booking['status']?.toString() ?? '0',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'User Name',
-                    style: TextStyle(fontWeight: FontWeight.w500, color: darkBlue, fontSize: 12),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: onDelete,
-              ),
-            ],
-          ),
-          Divider(color: Colors.grey[300], thickness: 2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Booking for', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w500)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        booking['from_date']?.toString() ?? 'N/A',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 5),
-                      const Text(
-                        '-',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        booking['to_date']?.toString() ?? 'N/A',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(height: 14, width: 1, color: Colors.black),
-                      const SizedBox(width: 10),
-                      Text(
-                        booking['from_time']?.toString() ?? 'N/A',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                      const Text(
-                        '-',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                      Text(
-                        booking['to_time']?.toString() ?? 'N/A',
-                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Address', style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w500)),
-              Expanded(
+
+              // Booking Status
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: darkBlue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Text(
-                  booking['note']?.toString() ?? 'N/A',
-                  textAlign: TextAlign.end,
-                  style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w500),
+                  booking['status']?.toString() ?? 'Unknown',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
                 ),
               ),
             ],
+          ),
+          const Divider(color: Colors.grey, thickness: 0.3, height: 24),
+
+          // Booking Details Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Date & Time
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Date', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    '${booking['from_date'] ?? 'N/A'} - ${booking['to_date'] ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Time', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    '${booking['from_time'] ?? 'N/A'} - ${booking['to_time'] ?? 'N/A'}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+
+              // Amount & User Name
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text('Amount', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    '\$${booking['amount']?.toString() ?? '0'}',
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: darkBlue, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Customer', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  FutureBuilder<String>(
+                    future: getCustomerName(booking['userId'] ?? ''),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Text(
+                          'Fetching...',
+                          style: TextStyle(fontSize: 12),
+                        );
+                      }
+                      return Text(
+                        snapshot.data ?? 'Unknown User',
+                        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black87, fontSize: 14),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Address / Note
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Note', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(
+                booking['note']?.toString() ?? 'No Note provided',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: onDelete,
+            ),
           ),
         ],
       ),

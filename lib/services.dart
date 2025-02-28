@@ -1,58 +1,83 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mascare_admin_backend/colors.dart';
+import 'package:get/get.dart';
+import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart'; // Make sure this import is correct
 
 class Services extends StatelessWidget {
   const Services({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: darkBlue,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('services').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No Services Available'));
-          } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final doc = snapshot.data!.docs[index];
-                final data = doc.data() as Map<String, dynamic>;
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: width < 768 ? 20 : 60,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Get.width < 768
+                ? GestureDetector(
+                onTap: () {
+                  Get.find<SidebarController>().showsidebar.value = true;
+                },
+                child: const Padding(
+                    padding: EdgeInsets.only(left: 10, top: 10),
+                    child: Icon(Icons.menu, color: Colors.white,)))
+                : const SizedBox.shrink(),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('services').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}',style: TextStyle(color: Colors.white),));
+                  } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No Services Available',style: TextStyle(color: Colors.white),));
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        final doc = snapshot.data!.docs[index];
+                        final data = doc.data() as Map<String, dynamic>;
 
-                // Check if service_provider exists
-                final String? serviceProviderUid = data['service_provider'];
+                        // Check if service_provider exists
+                        final String? serviceProviderUid = data['service_provider'];
 
-                return FutureBuilder<String>(
-                  // Fetch the user name from all_users based on the service_provider UID
-                  future: _getUserName(serviceProviderUid),
-                  builder: (context, snapshot) {
-                    String serviceProviderName = 'Unknown Service Provider';
-                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-                      serviceProviderName = snapshot.data!;
-                    }
+                        return FutureBuilder<String>(
+                          // Fetch the user name from all_users based on the service_provider UID
+                          future: _getUserName(serviceProviderUid),
+                          builder: (context, snapshot) {
+                            String serviceProviderName = 'Unknown Service Provider';
+                            if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                              serviceProviderName = snapshot.data!;
+                            }
 
-                    return Servicewidget(
-                      image: data['photo'] ?? 'assets/images/logo.png',
-                      serviceName: serviceProviderName, // Display user name here
-                      category: data['category'] ?? 'Uncategorized',
-                      pricePerHour: (data['price_per_hour'] ?? 0).toDouble(),
-                      averageRating: (data['average_rating'] ?? 0).toDouble(),
-                      serviceRatings: data['service_ratings'] ?? 0,
-                      caretakerId: doc.id,
-                      index: index,
+                            return Servicewidget(
+                              image: data['photo'] ?? 'assets/images/logo.png',
+                              serviceName: serviceProviderName, // Display user name here
+                              category: data['category'] ?? 'Uncategorized',
+                              pricePerHour: double.tryParse(data['price_per_hour']?.toString() ?? '0') ?? 0.0, // Safely parse to double
+                              averageRating: double.tryParse(data['average_rating']?.toString() ?? '0') ?? 0.0, // Safely parse averageRating
+                              serviceRatings: int.tryParse(data['service_ratings']?.toString() ?? '0') ?? 0,
+                              caretakerId: doc.id,
+                              index: index,
+                            );
+                          },
+                        );
+                      },
                     );
-                  },
-                );
-              },
-            );
-          }
-        },
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
