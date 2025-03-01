@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'SideBar/home_main.dart';
+import 'colors.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -16,9 +17,41 @@ class _LoginState extends State<Login> {
   bool isPasswordVisible = false;
   bool isLoading = false;
 
-  final Color darkBlue = const Color(0xFF00008B); // Dark Blue
-  final Color white = Colors.white; // White
-  final Color orange = const Color(0xFFFF8C00); // Orange
+  Future<void> _login() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    if (email == "admin@mascare.com" && password == "mascare123") {
+      // Simulate network delay (optional)
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        isLoading = false;
+      });
+      Get.offAll(HomeMain()); // Use offAll to prevent going back to login
+    } else {
+      // Simulate error delay (optional)
+      await Future.delayed(const Duration(seconds: 1)); // Optional delay
+
+      setState(() {
+        isLoading = false;
+      });
+
+      // Show error message
+      Get.snackbar(
+        "Login Failed",
+        "Invalid email or password.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,55 +77,45 @@ class _LoginState extends State<Login> {
           const SizedBox(height: 15),
           _buildTextField(passwordController, Icons.lock, 'Password', isPassword: true),
           const SizedBox(height: 30),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Login',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              SizedBox(
-                width: width < 425
-                    ? 170
-                    : width < 768
-                    ? 190
-                    : width <= 1440
-                    ? 300
-                    : width > 1440 && width <= 2550
-                    ? 300
-                    : 700,
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  Future.delayed(const Duration(seconds: 2), () {
-                    setState(() {
-                      isLoading = false;
-                    });
-                    Get.to(HomeMain());
-                  });
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: orange, // Orange button color
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        blurRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: isLoading
-                      ? Center(child: CircularProgressIndicator(color: white))
-                      : const Icon(Icons.arrow_forward_ios, color: Colors.white),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < 425
+                ? (MediaQuery.of(context).size.width - 280) / 2
+                : MediaQuery.of(context).size.width < 768
+                ? (MediaQuery.of(context).size.width - 300) / 2
+                : MediaQuery.of(context).size.width <= 1440
+                ? (MediaQuery.of(context).size.width - 400) / 2
+                : (MediaQuery.of(context).size.width - 700) / 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Login',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
-              ),
-            ],
+                GestureDetector(
+                  onTap: () {
+                    _login(); // Call the login function
+                  },
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: orange,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: isLoading
+                        ? Center(child: CircularProgressIndicator(color: whiteColor))
+                        : const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 60),
         ],
@@ -111,7 +134,7 @@ class _LoginState extends State<Login> {
           : 700,
       height: 50,
       decoration: BoxDecoration(
-        color: white,
+        color: whiteColor,
         borderRadius: BorderRadius.circular(8.0),
         border: Border.all(color: darkBlue, width: 1.5),
       ),

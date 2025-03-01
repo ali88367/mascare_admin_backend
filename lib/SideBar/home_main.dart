@@ -43,7 +43,7 @@ class _HomeMainState extends State<HomeMain> {
                         : sidebarController.selectedindex.value == 2
                         ? Events()
                         : sidebarController.selectedindex.value == 3
-                        ? AddEvents()
+                        ? AddEvent()
                         : sidebarController.selectedindex.value == 4
                         ? AddAdvertisement()
                         : sidebarController.selectedindex.value == 5

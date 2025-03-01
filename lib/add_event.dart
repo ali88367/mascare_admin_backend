@@ -4,26 +4,32 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // Import this for DateFormat
+import 'package:intl/intl.dart';
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:mascare_admin_backend/widgets/custom_button.dart';
-
 import 'SideBar/sidebar_controller.dart';
 
-class AddEvents extends StatefulWidget {
-  AddEvents({Key? key}) : super(key: key);
+class AddEvent extends StatefulWidget {
+  final Map<String, dynamic>? eventData; // Optional event data for editing
+  final String? eventId; // Optional event ID for editing
+
+  const AddEvent({Key? key, this.eventData, this.eventId}) : super(key: key);
+
+  // Added: Flag to indicate if navigated from edit
+  bool get isEditMode => eventData != null && eventId != null;
 
   @override
-  State<AddEvents> createState() => _AddEventsState();
+  State<AddEvent> createState() => _AddEventState();
 }
 
-class _AddEventsState extends State<AddEvents> {
+class _AddEventState extends State<AddEvent> {
   final SidebarController sidebarController = Get.find<SidebarController>();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Uint8List? _image;
+  String? _imageUrl; // To store the existing image URL
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _organizerController = TextEditingController();
@@ -34,10 +40,30 @@ class _AddEventsState extends State<AddEvents> {
   final TextEditingController _contactNumberController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers with existing data if available
+    if (widget.eventData != null) {
+      _titleController.text = widget.eventData!['title'] ?? '';
+      _descriptionController.text = widget.eventData!['description'] ?? '';
+      _organizerController.text = widget.eventData!['organizer'] ?? '';
+      _dateController.text = widget.eventData!['date'] ?? '';
+      _fromTimeController.text = widget.eventData!['from_time'] ?? '';
+      _toTimeController.text = widget.eventData!['to_time'] ?? '';
+      _ticketPriceController.text = widget.eventData!['ticket_price'] ?? '';
+      _contactNumberController.text = widget.eventData!['contact_number'] ?? '';
+      _addressController.text = widget.eventData!['address'] ?? '';
+      _imageUrl = widget.eventData!['image_url'] ?? ''; // Store existing URL
+    }
+  }
+
   Future<void> _pickDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _dateController.text.isNotEmpty
+          ? DateFormat('yyyy-MM-dd').parse(_dateController.text)
+          : DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
@@ -52,7 +78,9 @@ class _AddEventsState extends State<AddEvents> {
   Future<void> _pickTime(TextEditingController controller) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: controller.text.isNotEmpty
+          ? TimeOfDay.fromDateTime(DateFormat('hh:mm a').parse(controller.text))
+          : TimeOfDay.now(),
     );
 
     if (pickedTime != null) {
@@ -80,11 +108,10 @@ class _AddEventsState extends State<AddEvents> {
         _toTimeController.text.isEmpty ||
         _ticketPriceController.text.isEmpty ||
         _contactNumberController.text.isEmpty ||
-        _addressController.text.isEmpty ||
-        _image == null) {
+        _addressController.text.isEmpty) {
       Get.snackbar(
         "Error",
-        "All fields are required, including an image!",
+        "All fields are required!",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -92,9 +119,24 @@ class _AddEventsState extends State<AddEvents> {
     }
 
     try {
-      String? imageUrl = await _uploadImageToStorage();
+      String? imageUrl;
+      if (_image != null) {
+        imageUrl = await _uploadImageToStorage();
+      } else {
+        imageUrl = _imageUrl; // Use existing image URL if no new image selected
+      }
 
-      await _firestore.collection('events').add({
+      if (imageUrl == null) {
+        Get.snackbar(
+          "Error",
+          "Failed to get image URL.",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      Map<String, dynamic> eventData = {
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'organizer': _organizerController.text.trim(),
@@ -105,32 +147,35 @@ class _AddEventsState extends State<AddEvents> {
         'contact_number': _contactNumberController.text.trim(),
         'address': _addressController.text.trim(),
         'image_url': imageUrl,
-        'created_at': FieldValue.serverTimestamp(),
-      });
+      };
 
-      Get.snackbar(
-        "Success",
-        "Event added successfully!",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+      if (widget.eventId == null) {
+        // Adding a new event
+        eventData['created_at'] = FieldValue.serverTimestamp();
+        await _firestore.collection('events').add(eventData);
+        Get.snackbar(
+          "Success",
+          "Event added successfully!",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        // Updating an existing event
+        await _firestore.collection('events').doc(widget.eventId).update(eventData);
+        Get.snackbar(
+          "Success",
+          "Event updated successfully!",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      }
 
-      _titleController.clear();
-      _descriptionController.clear();
-      _organizerController.clear();
-      _dateController.clear();
-      _fromTimeController.clear();
-      _toTimeController.clear();
-      _ticketPriceController.clear();
-      _contactNumberController.clear();
-      _addressController.clear();
-      setState(() {
-        _image = null;
-      });
+      Get.back(); // Navigate back after successful operation
+
     } catch (e) {
       Get.snackbar(
         "Error",
-        "Failed to add event: $e",
+        "Failed to add/update event: $e",
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -145,6 +190,7 @@ class _AddEventsState extends State<AddEvents> {
     if (result != null && result.files.first.bytes != null) {
       setState(() {
         _image = result.files.first.bytes;
+        _imageUrl = null; // Reset the image URL since a new image is selected
       });
       print("Image selected successfully.");
     } else {
@@ -190,6 +236,17 @@ class _AddEventsState extends State<AddEvents> {
 
     return Scaffold(
       backgroundColor: darkBlue,
+      appBar: widget.isEditMode // Conditionally show the AppBar
+          ? AppBar(
+        backgroundColor: darkBlue,
+        title: Text(widget.eventId == null ? 'Add Event' : 'Edit Event',
+            style: const TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(), // Navigate back when back button is pressed
+        ),
+      )
+          : null, // Don't show AppBar if not in edit mode
       body: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: width < 768 ? 20 : 60,
@@ -197,17 +254,6 @@ class _AddEventsState extends State<AddEvents> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Get.width < 768
-                ? GestureDetector(
-                onTap: () {
-                  sidebarController.showsidebar.value = true;
-
-                },
-                child: const Padding(
-                    padding: EdgeInsets.only(left: 10, top: 10),
-                    child: Icon(Icons.menu, color: Colors.white,))) // Ensure the icon is visible
-                : const SizedBox.shrink(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -228,15 +274,26 @@ class _AddEventsState extends State<AddEvents> {
                                 borderRadius: BorderRadius.circular(10),
                                 color: Colors.grey[300],
                               ),
-                              child: _image == null
-                                  ? const Icon(Icons.image, size: 40, color: Colors.grey)
-                                  : ClipRRect(
+                              child: _image != null
+                                  ? ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.memory(
                                   _image!,
                                   fit: BoxFit.cover,
                                 ),
-                              ),
+                              )
+                                  : (_imageUrl != null && _imageUrl!.isNotEmpty)
+                                  ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  _imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(child: Text("Error loading image"));
+                                  },
+                                ),
+                              )
+                                  : const Icon(Icons.image, size: 40, color: Colors.grey),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -269,11 +326,12 @@ class _AddEventsState extends State<AddEvents> {
                           _buildInputField("Address", _addressController, maxLines: 3),
                           const SizedBox(height: 30),
                           CustomButton(
-                              text: 'Add Event',
-                              onPressed: addEvent,
-                              color: orange,
-                              height: 50,
-                              width: 700),
+                            text: widget.eventId == null ? 'Add Event' : 'Update Event',
+                            onPressed: addEvent,
+                            color: orange,
+                            height: 50,
+                            width: 700,
+                          ),
                         ],
                       ),
                     ),

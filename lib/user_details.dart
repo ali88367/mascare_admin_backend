@@ -85,99 +85,119 @@ class UserDetails extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Obx(() => ListView.builder(
-                itemCount: userController.filteredUsers.length,
-                itemBuilder: (context, index) {
-                  final user = userController.filteredUsers[index];
-              //    print("User Data: $user"); // ADDED: Print the user data here
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: userController.usersStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: orange,));
+                  }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red),));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No users found.', style: TextStyle(color: Colors.white),));
+                  }
+
+                  final users = snapshot.data!;
+                  final filteredUsers = userController.filterUsers(users);
+
+                  return ListView.builder(
+                    itemCount: filteredUsers.length,
+                    itemBuilder: (context, index) {
+                      final user = filteredUsers[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
                           children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.grey,
-                              ),
-                              child: user['profile_pic'] != null && user['profile_pic']!.isNotEmpty
-                                  ? ClipOval(
-                                child: Image.network(
-                                  user['profile_pic'],
-                                  fit: BoxFit.cover,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Container(
                                   width: 50,
                                   height: 50,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
-                                            : null,
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Icon(Icons.person, color: Colors.white);
-                                  },
-                                ),
-                              )
-                                  : const Icon(Icons.person, color: Colors.white),
-                            ),
-                            Expanded(
-                              child: Text(
-                                user['name'] ?? '',
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, color: Colors.white),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                user['email'] ?? '',
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, color: Colors.white),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                user['role'] ?? '',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 16, color: Colors.white),
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () => userController.deleteUser(
-                                    user['uid'],
-                                    user['email'],
-                                    user['name'],
-                                    user['number'],
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey,
                                   ),
-                                  icon: const Icon(Icons.delete),
-                                  color: Colors.red,
+                                  child: user['profile_pic'] != null && user['profile_pic']!.isNotEmpty
+                                      ? ClipOval(
+                                    child: Image.network(
+                                      user['profile_pic'],
+                                      fit: BoxFit.cover,
+                                      width: 50,
+                                      height: 50,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            value: loadingProgress.expectedTotalBytes != null
+                                                ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                                : null,
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Icon(Icons.person, color: Colors.white);
+                                      },
+                                    ),
+                                  )
+                                      : const Icon(Icons.person, color: Colors.white),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    user['name'] ?? '',
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    user['email'] ?? '',
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    user['role'] ?? '',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => userController.deleteUser(
+                                        user['uid'],
+                                        user['email'],
+                                        user['name'],
+                                        user['number'],
+                                      ),
+                                      icon: const Icon(Icons.delete),
+                                      color: Colors.red,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
+
+                            SizedBox(height: 10,),
+                            const Divider(),
+                            SizedBox(height: 10,),
+
                           ],
                         ),
-                        SizedBox(height: 10,),
-                        const Divider(),
-                        SizedBox(height: 10,),
-
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
-              )),
+              ),
             ),
           ],
         ),

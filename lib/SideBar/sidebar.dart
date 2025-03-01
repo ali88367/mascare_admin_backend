@@ -1,20 +1,17 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
+import 'package:mascare_admin_backend/login.dart';
 import 'package:sidebarx/sidebarx.dart';
-
 import '../colors.dart';
 import '../widgets/custom_button.dart';
 
 class ExampleSidebarX extends StatefulWidget {
-
   @override
   State<ExampleSidebarX> createState() => _ExampleSidebarXState();
 }
 
 class _ExampleSidebarXState extends State<ExampleSidebarX> {
-
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -40,7 +37,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
               height: 40,
               text: 'Yes',
               onPressed: () async {
-                // Handle logout logic here
+                Get.offAll(Login());
               },
             ),
           ],
@@ -57,6 +54,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
       builder: (sidebarController) {
         return SidebarX(
           controller: sidebarController.controller,
+          animationDuration: Duration.zero, // Disable animation globally for SidebarX
           theme: SidebarXTheme(
             hoverTextStyle: TextStyle(color: orange),
             margin: const EdgeInsets.all(10),
@@ -64,7 +62,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
               color: darkBlue,
               borderRadius: BorderRadius.circular(20),
             ),
-            hoverColor: Colors.white.withOpacity(0.1),  // Subtle white hover
+            hoverColor: Colors.white.withOpacity(0.1), // Subtle white hover
             textStyle: TextStyle(color: Colors.white70, fontSize: 18),
             selectedTextStyle: TextStyle(color: orange, fontSize: 18, fontWeight: FontWeight.bold),
             itemTextPadding: const EdgeInsets.only(left: 10),
@@ -144,7 +142,8 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 4,
-              icon: Icons.campaign,              label: 'Advertisement',
+              icon: Icons.campaign,
+              label: 'Advertisement',
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 5,
@@ -158,7 +157,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 7,
-              icon: Icons.design_services_rounded,
+              icon: Icons.add_alert,
               label: 'Reports',
             ),
             SidebarXItem(

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mascare_admin_backend/colors.dart';
 import 'SideBar/sidebar_controller.dart';
+import 'add_event.dart';
 import 'event_details.dart';
 
 class Events extends StatefulWidget {
@@ -16,53 +17,11 @@ class Events extends StatefulWidget {
 class _EventsState extends State<Events> {
   final SidebarController sidebarController = Get.find<SidebarController>();
 
-  void _editEvent(BuildContext context, DocumentSnapshot event) {
-    TextEditingController titleController =
-    TextEditingController(text: event['title']);
-    TextEditingController dateController =
-    TextEditingController(text: event['date']);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Edit Event"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: "Title"),
-              ),
-              TextField(
-                controller: dateController,
-                decoration: const InputDecoration(labelText: "Date (YYYY-MM-DD)"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('events')
-                    .doc(event.id)
-                    .update({
-                  'title': titleController.text,
-                  'date': dateController.text,
-                });
-                Navigator.pop(context);
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
+  // Method to navigate to the AddEvent screen with pre-filled data
+  void _navigateToEditEvent(DocumentSnapshot event) {
+    Get.to(() => AddEvent(eventData: event.data() as Map<String, dynamic>, eventId: event.id));
   }
+
 
   void _deleteEvent(BuildContext context, String eventId) {
     showDialog(
@@ -213,7 +172,7 @@ class _EventsState extends State<Events> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () => _editEvent(context, event),
+                                      onPressed: () => _navigateToEditEvent(event), // Navigate to AddEvent screen
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),

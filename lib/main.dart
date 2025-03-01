@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mascare_admin_backend/login.dart';
 import 'firebase_options.dart';
 import 'SideBar/home_main.dart';
 
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Admin Panel',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: HomeMain(),
+      home: Login(),
     );
   }
 }

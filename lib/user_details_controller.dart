@@ -2,19 +2,43 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mascare_admin_backend/colors.dart';
 
 class UserController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final RxList<Map<String, dynamic>> _usersData = <Map<String, dynamic>>[].obs;
+  // Remove RxList _usersData
+  //final RxList<Map<String, dynamic>> _usersData = <Map<String, dynamic>>[].obs;
   RxString searchQuery = ''.obs;
 
-  List<Map<String, dynamic>> get usersData => _usersData.value;
+  //Remove getter usersData
+  //List<Map<String, dynamic>> get usersData => _usersData.value;
 
-  List<Map<String, dynamic>> get filteredUsers {
+  // Create a stream of users
+  Stream<List<Map<String, dynamic>>> get usersStream {
+    return _firestore
+        .collection('all_users')
+        .where('is_deleted', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return {
+          'uid': doc.id,
+          'email': doc['email'] as String? ?? '',
+          'role': doc['role'] as String? ?? '',
+          'name': doc['user_name'] as String? ?? '',
+          'number': doc['number'] as String? ?? '',
+          'profile_pic': doc['profile_pic'] as String? ?? '',
+        };
+      }).toList();
+    });
+  }
+
+  // Filtered users based on search query
+  List<Map<String, dynamic>> filterUsers(List<Map<String, dynamic>> users) {
     if (searchQuery.isEmpty) {
-      return usersData;
+      return users;
     } else {
-      return usersData.where((user) =>
+      return users.where((user) =>
           user['name'].toString().toLowerCase().contains(searchQuery.value)).toList();
     }
   }
@@ -22,53 +46,24 @@ class UserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _fetchUsers();
     ever(searchQuery, (_) {
       update(); // Trigger UI update when searchQuery changes
     });
   }
 
-  Future<void> _fetchUsers() async {
-    try {
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('all_users')
-          .where('is_deleted', isEqualTo: false) // Exclude deleted users
-          .get();
-
-      _usersData.value = querySnapshot.docs.map((doc) {
-        return {
-          'uid': doc.id,
-          'email': doc['email'] as String? ?? '',
-          'role': doc['role'] as String? ?? '',
-          'name': doc['user_name'] as String? ?? '',
-          'number': doc['number'] as String? ?? '',
-          'profile_pic': doc['profile_pic'] as String? ?? '', // Fetch profile picture
-
-        };
-      }).toList();
-    } catch (e) {
-      print("Error fetching users: $e");
-      Get.snackbar(
-        'Error',
-        'Failed to fetch users: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-
   Future<void> deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
     bool? shouldDelete = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to permanently delete this user? This action is irreversible.'),
+        backgroundColor: darkBlue,
+        title: const Text('Confirm Delete',style: TextStyle(color: orange),),
+        content: const Text('Are you sure you want to permanently delete this user? This action is irreversible.',style: TextStyle(color: whiteColor),),
         actions: [
           TextButton(
-            child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
             onPressed: () => Get.back(result: false),
           ),
           TextButton(
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
             onPressed: () => Get.back(result: true),
           ),
         ],
@@ -151,14 +146,24 @@ class UserController extends GetxController {
           print("Service document not found for user: $userId"); //It's okay if no services document.
         }
 
-        // Update local state
-        _usersData.removeWhere((user) => user['uid'] == userId);
+        // Update local state (no longer needed)
+        //_usersData.removeWhere((user) => user['uid'] == userId);
 
         Get.snackbar(
           'Success',
           'User deleted successfully',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.blue[900], // Dark Blue
+          titleText: const Text(
+            'Success',
+            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+          ),
+          messageText: const Text(
+            'User deleted successfully',
+            style: TextStyle(color: Colors.white),
+          ),
         );
+
       } catch (e) {
         print("Error deleting user: $e");
         Get.snackbar(

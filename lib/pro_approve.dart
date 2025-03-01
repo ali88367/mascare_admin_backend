@@ -219,23 +219,40 @@ class _ProApproveState extends State<ProApprove> {
   Future<void> _rejectProfessional(Map<String, dynamic> proDetails, String docId, BuildContext context) async {
     TextEditingController reasonController = TextEditingController();
 
-    // Show a dialog to enter the rejection reason
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Reject Professional"),
-          content: TextField(
-            controller: reasonController,
-            decoration: const InputDecoration(labelText: "Enter reason for rejection"),
-            maxLines: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners
+          title: const Text("Reject Professional", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Enter reason for rejection:", style: TextStyle(fontSize: 14, color: Colors.black54)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  hintText: "Type your reason here...",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), // Rounded input field
+                  filled: true,
+                  fillColor: Colors.grey[100], // Light background
+                ),
+                maxLines: 3,
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               onPressed: () async {
                 String reason = reasonController.text.trim();
                 if (reason.isEmpty) {
@@ -248,7 +265,6 @@ class _ProApproveState extends State<ProApprove> {
                 Navigator.pop(context); // Close the dialog
 
                 try {
-                  // Save rejected professional details
                   await FirebaseFirestore.instance.collection('rejected_pros').doc(proDetails['uid']).set({
                     "name": proDetails['name'],
                     "email": proDetails['email'],
@@ -261,17 +277,15 @@ class _ProApproveState extends State<ProApprove> {
                     "registration_number": proDetails['registration_number'],
                     "role": proDetails['role'],
                     "uid": proDetails['uid'],
-                    "rejected_at": FieldValue.serverTimestamp(), // Timestamp for record keeping
-                    "disapprove_reason": reason, // Store the rejection reason
+                    "rejected_at": FieldValue.serverTimestamp(),
+                    "disapprove_reason": reason,
                   });
 
-                  // Update the all_users collection with the rejection reason
                   await FirebaseFirestore.instance.collection('all_users').doc(proDetails['uid']).update({
                     "account_approved": false,
                     "disapprove_reason": reason,
                   });
 
-                  // Delete from pro_requests collection
                   await FirebaseFirestore.instance.collection('pro_requests').doc(docId).delete();
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -284,7 +298,7 @@ class _ProApproveState extends State<ProApprove> {
                   );
                 }
               },
-              child: const Text("Confirm"),
+              child: const Text("Confirm",style: TextStyle(color: Colors.white),),
             ),
           ],
         );
