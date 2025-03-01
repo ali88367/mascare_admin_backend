@@ -143,7 +143,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 4,
               icon: Icons.campaign,
-              label: 'Advertisement',
+              label: 'Add Ads',
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 5,
@@ -153,7 +153,7 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 6,
               icon: Icons.design_services_rounded,
-              label: 'Services',
+              label: 'Advertisements',
             ),
             SidebarXItem(
               onTap: () => sidebarController.selectedindex.value = 7,

@@ -35,7 +35,6 @@ class _ReportsState extends State<Reports> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBlue,
-
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: StreamBuilder<QuerySnapshot>(
@@ -57,134 +56,125 @@ class _ReportsState extends State<Reports> {
               );
             }
 
-            return ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                final reportDoc = snapshot.data!.docs[index];
+            // Show loader until all reports have fetched necessary data
+            return FutureBuilder<List<Map<String, dynamic>>>(
+              future: Future.wait(snapshot.data!.docs.map((reportDoc) async {
                 final reportData = reportDoc.data() as Map<String, dynamic>;
                 final reporterId = reportData['reporterId'];
                 final serviceId = reportData['serviceId'];
 
-                return FutureBuilder<String>(
-                  future: _getUsernameFromUserId(reporterId),
-                  builder: (context, reporterSnapshot) {
-                    if (reporterSnapshot.hasError) {
-                      return ListTile(
-                        title: Text('Error loading reporter name: ${reporterSnapshot.error}',
-                            style: const TextStyle(color: Colors.red)),
-                      );
-                    }
+                final reporterName = await _getUsernameFromUserId(reporterId);
+                final serviceName = await _getUsernameFromUserId(serviceId);
 
-                    if (reporterSnapshot.connectionState == ConnectionState.waiting) {
-                      return const ListTile(
-                        title: Text('Loading reporter name...', style: TextStyle(color: Colors.white)),
-                      );
-                    }
+                return {
+                  'reportData': reportData,
+                  'reporterName': reporterName,
+                  'serviceName': serviceName,
+                };
+              }).toList()),
+              builder: (context, reportsSnapshot) {
+                if (reportsSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Colors.white));
+                }
 
-                    final reporterName = reporterSnapshot.data ?? 'Unknown Reporter';
+                if (reportsSnapshot.hasError) {
+                  return Center(
+                    child: Text('Error loading reports: ${reportsSnapshot.error}',
+                        style: const TextStyle(color: Colors.red)),
+                  );
+                }
 
-                    return FutureBuilder<String>(
-                      future: _getUsernameFromUserId(serviceId),
-                      builder: (context, serviceSnapshot) {
-                        if (serviceSnapshot.hasError) {
-                          return ListTile(
-                            title: Text('Error loading service name: ${serviceSnapshot.error}',
-                                style: const TextStyle(color: Colors.red)),
-                          );
-                        }
+                final reports = reportsSnapshot.data ?? [];
 
-                        if (serviceSnapshot.connectionState == ConnectionState.waiting) {
-                          return const ListTile(
-                            title: Text('Loading service name...', style: TextStyle(color: Colors.white)),
-                          );
-                        }
+                return ListView.builder(
+                  itemCount: reports.length,
+                  itemBuilder: (context, index) {
+                    final reportData = reports[index]['reportData'];
+                    final reporterName = reports[index]['reporterName'];
+                    final serviceName = reports[index]['serviceName'];
 
-                        final serviceName = serviceSnapshot.data ?? 'Unknown Service';
-
-                        return Card(
-                          color: Colors.white,
-                          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 3,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    return Card(
+                      color: Colors.white,
+                      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: darkBlue,
-                                      child: const Icon(Icons.person, color: Colors.white),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            reporterName,
-                                            style: TextStyle(
-                                                color: darkBlue, fontSize: 16, fontWeight: FontWeight.bold),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text('Reporter', style: TextStyle(color: Colors.grey[700])),
-                                        ],
+                                CircleAvatar(
+                                  backgroundColor: darkBlue,
+                                  child: const Icon(Icons.person, color: Colors.white),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        reporterName,
+                                        style: TextStyle(
+                                            color: darkBlue, fontSize: 16, fontWeight: FontWeight.bold),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: orange,
-                                      child: const Icon(Icons.business, color: Colors.white),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            serviceName,
-                                            style: TextStyle(
-                                                color: orange, fontSize: 16, fontWeight: FontWeight.bold),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text('Service Provider', style: TextStyle(color: Colors.grey[700])),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 20, thickness: 1),
-                                Text(
-                                  'Reason:',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  reportData['reason'] ?? 'No reason provided',
-                                  style: const TextStyle(color: Colors.black, fontSize: 14),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.access_time, color: Colors.grey, size: 18),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      DateFormat('yyyy-MM-dd HH:mm:ss')
-                                          .format((reportData['timestamp'] as Timestamp).toDate()),
-                                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Text('Reporter', style: TextStyle(color: Colors.grey[700])),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        );
-                      },
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: orange,
+                                  child: const Icon(Icons.business, color: Colors.white),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        serviceName,
+                                        style: TextStyle(
+                                            color: orange, fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text('Service Provider', style: TextStyle(color: Colors.grey[700])),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 20, thickness: 1),
+                            Text(
+                              'Reason:',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              reportData['reason'] ?? 'No reason provided',
+                              style: const TextStyle(color: Colors.black, fontSize: 14),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const Icon(Icons.access_time, color: Colors.grey, size: 18),
+                                const SizedBox(width: 5),
+                                Text(
+                                  DateFormat('yyyy-MM-dd HH:mm:ss')
+                                      .format((reportData['timestamp'] as Timestamp).toDate()),
+                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 );

@@ -22,6 +22,7 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
   final SidebarController sidebarController = Get.find<SidebarController>();
 
   Uint8List? _image;
+  bool _isLoading = false; // Add a loading state variable
 
   Future<void> _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -37,11 +38,15 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
 
   Future<void> addAdvertisement() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Start loading
+      });
+
       try {
         String imageUrl = "";
-        String? docId;
 
         if (_image != null) {
+          // Upload image to Firebase Storage
           Reference ref = _storage
               .ref()
               .child('advertisements/${DateTime.now().millisecondsSinceEpoch}.jpg');
@@ -51,14 +56,12 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
           imageUrl = await snapshot.ref.getDownloadURL();
         }
 
-        // Save to Firestore and get document ID
-        DocumentReference docRef = await _firestore.collection('advertisements').add({
+        // Save to Firestore with image URL
+        await _firestore.collection('advertisements').add({
           'title': _titleController.text.trim(),
           'image_url': imageUrl,
           'created_at': FieldValue.serverTimestamp(),
         });
-
-        docId = docRef.id;
 
         Get.snackbar(
           "Success",
@@ -79,38 +82,20 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
+      } finally {
+        setState(() {
+          _isLoading = false; // End loading
+        });
       }
-    }
-  }
-
-  Future<void> deleteAdvertisement(String docId, String imageUrl) async {
-    try {
-      await _firestore.collection('advertisements').doc(docId).delete();
-
-      if (imageUrl.isNotEmpty) {
-        await _storage.refFromURL(imageUrl).delete();
-      }
-
-      Get.snackbar(
-        "Success",
-        "Advertisement deleted successfully!",
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      debugPrint("Error deleting advertisement: $e");
-      Get.snackbar(
-        "Error",
-        "Failed to delete advertisement",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
+    double width = MediaQuery
+        .of(context)
+        .size
+        .width;
 
     return Scaffold(
       backgroundColor: darkBlue,
@@ -123,169 +108,100 @@ class _AddAdvertisementState extends State<AddAdvertisement> {
           children: [
             Get.width < 768
                 ? GestureDetector(
-              onTap: () {
-                sidebarController.showsidebar.value = true;
-              },
-              child: const Padding(
-                padding: EdgeInsets.only(left: 10, top: 10),
-                child: Icon(Icons.menu, color: Colors.white),
-              ),
-            )
+                onTap: () {
+                  sidebarController.showsidebar.value = true;
+
+                },
+                child: const Padding(
+                    padding: EdgeInsets.only(left: 10, top: 10),
+                    child: Icon(Icons.menu,
+                      color: Colors.white,))) // Ensure the icon is visible
                 : const SizedBox.shrink(),
-            Expanded(
-              child: Column(
-                children: [
-                  SizedBox(height: 20),
-                  Text(
-                    "Upload Advertisement",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 200,
-                      width: 300,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey[300],
-                      ),
-                      child: _image == null
-                          ? Icon(Icons.image, size: 40, color: Colors.grey)
-                          : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.memory(
-                          _image!,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      controller: _titleController,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: "Advertisement Title",
-                        labelStyle: TextStyle(color: Colors.white),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: orange),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return "Title is required";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  CustomButton(
-                    text: 'Add Advertisement',
-                    onPressed: addAdvertisement,
-                    color: orange,
-                    height: 50,
-                    width: 250,
-                  ),
-                  SizedBox(height: 40),
-                  Expanded(
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: _firestore.collection('advertisements').snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No advertisements found",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          );
-                        }
-
-                        var ads = snapshot.data!.docs;
-
-                        return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 4 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 0.8,
+            Expanded( // Added Expanded to allow the Center to fill the remaining space
+              child: Center( // Your original Center widget
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Upload Advertisement",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                          itemCount: ads.length,
-                          itemBuilder: (context, index) {
-                            var ad = ads[index];
-                            String docId = ad.id;
-                            String title = ad['title'];
-                            String imageUrl = ad['image_url'];
-
-                            return Card(
-                              color: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              elevation: 4,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                                      child: imageUrl.isNotEmpty
-                                          ? Image.network(imageUrl, fit: BoxFit.cover)
-                                          : Container(
-                                        color: Colors.grey[300],
-                                        child: Icon(Icons.image, color: Colors.grey[700], size: 50),
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      title,
-                                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-                                    child: ElevatedButton(
-                                      onPressed: () => deleteAdvertisement(docId, imageUrl),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      child: Text("Delete", style: TextStyle(color: Colors.white)),
-                                    ),
-                                  ),
-                                ],
+                        ),
+                        SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            height: 200,
+                            width: 300,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.grey[300],
+                            ),
+                            child: _image == null
+                                ? Icon(
+                                Icons.image, size: 40, color: Colors.grey)
+                                : ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.memory(
+                                _image!,
+                                fit: BoxFit.cover,
                               ),
-                            );
-                          },
-                        );
-                      },
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        SizedBox(
+                          width: 300,
+                          child: TextFormField(
+                            controller: _titleController,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: "Advertisement Title",
+                              labelStyle: TextStyle(color: Colors.white),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: orange),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value
+                                  .trim()
+                                  .isEmpty) {
+                                return "Title is required";
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        _isLoading
+                            ? CircularProgressIndicator(
+                            valueColor:
+                            AlwaysStoppedAnimation<Color>(orange)) // Show loader
+                            : CustomButton(
+                          text: 'Add Advertisement',
+                          onPressed: addAdvertisement,
+                          color: orange,
+                          height: 50,
+                          width: 250,
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-}
+  }}

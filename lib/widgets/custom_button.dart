@@ -15,6 +15,7 @@ class CustomButton extends StatelessWidget {
   final double fontSize;
   final FontWeight fontWeight;
   final BoxBorder? border;
+  final Widget? child; // Make the child optional
 
   CustomButton({
     required this.text,
@@ -27,6 +28,7 @@ class CustomButton extends StatelessWidget {
     this.fontSize = 16,
     this.fontWeight = FontWeight.w500,
     this.border,
+    this.child, // No required here
   });
 
   @override
@@ -43,14 +45,18 @@ class CustomButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: border),
             child: Center(
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: fontSize,
-                  fontWeight: fontWeight,
-                ),
-              ),
+                child: child != null // Check for child first
+                    ? child! // Use the child widget
+                    : Text( // If no child, use the default Text
+                  text,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: fontSize,
+                    fontWeight: fontWeight,
+                  ),
+                )
+
+
             )
 
         )

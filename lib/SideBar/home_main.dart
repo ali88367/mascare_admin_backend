@@ -5,6 +5,7 @@ import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
 import 'package:mascare_admin_backend/pro_approve.dart';
 import '../add_event.dart';
 import '../advertisment.dart';
+import '../advertisments_lists.dart';
 import '../bookings.dart';
 import '../events.dart';
 import '../reports.dart';
@@ -49,7 +50,7 @@ class _HomeMainState extends State<HomeMain> {
                         : sidebarController.selectedindex.value == 5
                         ? Bookings()
                         : sidebarController.selectedindex.value == 6
-                        ? Services()
+                        ? AdvertisementList()
                         : sidebarController.selectedindex.value == 7
                         ? Reports()
 

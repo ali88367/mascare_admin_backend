@@ -24,7 +24,7 @@ class AddEvent extends StatefulWidget {
 
 class _AddEventState extends State<AddEvent> {
   final SidebarController sidebarController = Get.find<SidebarController>();
-
+  bool _isLoading = false;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -99,6 +99,7 @@ class _AddEventState extends State<AddEvent> {
     }
   }
 
+
   Future<void> addEvent() async {
     if (_titleController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
@@ -118,12 +119,16 @@ class _AddEventState extends State<AddEvent> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Show loader
+    });
+
     try {
       String? imageUrl;
       if (_image != null) {
         imageUrl = await _uploadImageToStorage();
       } else {
-        imageUrl = _imageUrl; // Use existing image URL if no new image selected
+        imageUrl = _imageUrl;
       }
 
       if (imageUrl == null) {
@@ -150,7 +155,6 @@ class _AddEventState extends State<AddEvent> {
       };
 
       if (widget.eventId == null) {
-        // Adding a new event
         eventData['created_at'] = FieldValue.serverTimestamp();
         await _firestore.collection('events').add(eventData);
         Get.snackbar(
@@ -160,7 +164,6 @@ class _AddEventState extends State<AddEvent> {
           colorText: Colors.white,
         );
       } else {
-        // Updating an existing event
         await _firestore.collection('events').doc(widget.eventId).update(eventData);
         Get.snackbar(
           "Success",
@@ -179,9 +182,12 @@ class _AddEventState extends State<AddEvent> {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loader
+      });
     }
   }
-
   Future<void> _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -325,13 +331,32 @@ class _AddEventState extends State<AddEvent> {
                           _buildInputField("Contact Number", _contactNumberController, isNumber: true),
                           _buildInputField("Address", _addressController, maxLines: 3),
                           const SizedBox(height: 30),
-                          CustomButton(
-                            text: widget.eventId == null ? 'Add Event' : 'Update Event',
-                            onPressed: addEvent,
-                            color: orange,
-                            height: 50,
-                            width: 700,
+                      Container(
+                        width: 700, // Set the width
+                        height: 50, // Set the height
+                        decoration: BoxDecoration(
+                          color: _isLoading ? orange.withOpacity(0.7) : orange, // Change opacity when loading
+                          borderRadius: BorderRadius.circular(10), // Rounded corners
+                        ),
+                        child: InkWell(
+                          onTap: _isLoading ? null : addEvent, // Disable onTap when loading
+                          borderRadius: BorderRadius.circular(10), // Match the container's border radius
+                          child: Center(
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white), // White loader
+                            )
+                                : Text(
+                              widget.eventId == null ? 'Add Event' : 'Update Event',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
+                        ),
+                      )
                         ],
                       ),
                     ),
