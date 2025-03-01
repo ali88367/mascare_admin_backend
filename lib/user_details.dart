@@ -101,18 +101,41 @@ class UserDetails extends StatelessWidget {
                             Container(
                               width: 50,
                               height: 50,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.grey,
                               ),
-                              child: const Icon(Icons.person, color: Colors.white),
+                              child: user['profile_pic'] != null && user['profile_pic']!.isNotEmpty
+                                  ? ClipOval(
+                                child: Image.network(
+                                  user['profile_pic'],
+                                  fit: BoxFit.cover,
+                                  width: 50,
+                                  height: 50,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                            : null,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(Icons.person, color: Colors.white);
+                                  },
+                                ),
+                              )
+                                  : const Icon(Icons.person, color: Colors.white),
                             ),
                             Expanded(
                               child: Text(
                                 user['name'] ?? '',
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16,color: Colors.white),
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
                               ),
                             ),
                             Expanded(
@@ -120,28 +143,18 @@ class UserDetails extends StatelessWidget {
                                 user['email'] ?? '',
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16,color: Colors.white),
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
                               ),
                             ),
                             Expanded(
                               child: Text(
                                 user['role'] ?? '',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 16,color: Colors.white),
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
                               ),
                             ),
                             Row(
                               children: [
-                                // IconButton(
-                                //   onPressed: () => _editUser(
-                                //     user['uid'] ?? '',
-                                //     user['name'] ?? '',
-                                //     user['email'] ?? '',
-                                //     user['role'] ?? '',
-                                //   ),
-                                //   icon: const Icon(Icons.edit),
-                                //   color: orange,
-                                // ),
                                 IconButton(
                                   onPressed: () => userController.deleteUser(
                                     user['uid'],

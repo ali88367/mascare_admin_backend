@@ -30,7 +30,11 @@ class UserController extends GetxController {
 
   Future<void> _fetchUsers() async {
     try {
-      QuerySnapshot querySnapshot = await _firestore.collection('all_users').get();
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('all_users')
+          .where('is_deleted', isEqualTo: false) // Exclude deleted users
+          .get();
+
       _usersData.value = querySnapshot.docs.map((doc) {
         return {
           'uid': doc.id,
@@ -38,6 +42,8 @@ class UserController extends GetxController {
           'role': doc['role'] as String? ?? '',
           'name': doc['user_name'] as String? ?? '',
           'number': doc['number'] as String? ?? '',
+          'profile_pic': doc['profile_pic'] as String? ?? '', // Fetch profile picture
+
         };
       }).toList();
     } catch (e) {

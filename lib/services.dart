@@ -40,11 +40,21 @@ class Services extends StatelessWidget {
                   } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(child: Text('No Services Available',style: TextStyle(color: Colors.white),));
                   } else {
-                    return ListView.builder(
+                    return  ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
                         final doc = snapshot.data!.docs[index];
                         final data = doc.data() as Map<String, dynamic>;
+
+                        // Check if 'single_photo' exists and its value
+                        final bool singlePhoto = data['single_photo'] ?? false;
+
+                        // Determine which image to use
+                        final String image = singlePhoto
+                            ? (data['photo'] ?? 'assets/images/logo.png') // Use single image
+                            : ((data['photos'] is List && data['photos'].isNotEmpty)
+                            ? data['photos'][0] // Use the first image from photos array
+                            : 'assets/images/logo.png'); // Default image if array is empty
 
                         // Check if service_provider exists
                         final String? serviceProviderUid = data['service_provider'];
@@ -59,11 +69,11 @@ class Services extends StatelessWidget {
                             }
 
                             return Servicewidget(
-                              image: data['photo'] ?? 'assets/images/logo.png',
-                              serviceName: serviceProviderName, // Display user name here
+                              image: image, // Use the conditionally fetched image
+                              serviceName: serviceProviderName,
                               category: data['category'] ?? 'Uncategorized',
-                              pricePerHour: double.tryParse(data['price_per_hour']?.toString() ?? '0') ?? 0.0, // Safely parse to double
-                              averageRating: double.tryParse(data['average_rating']?.toString() ?? '0') ?? 0.0, // Safely parse averageRating
+                              pricePerHour: double.tryParse(data['price_per_hour']?.toString() ?? '0') ?? 0.0,
+                              averageRating: double.tryParse(data['average_rating']?.toString() ?? '0') ?? 0.0,
                               serviceRatings: int.tryParse(data['service_ratings']?.toString() ?? '0') ?? 0,
                               caretakerId: doc.id,
                               index: index,
@@ -72,6 +82,7 @@ class Services extends StatelessWidget {
                         );
                       },
                     );
+
                   }
                 },
               ),
