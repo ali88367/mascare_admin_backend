@@ -39,6 +39,11 @@ class _MessagesState extends State<Messages> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('Inbox', style: const TextStyle(color: orange)),
+        backgroundColor:darkBlue,
+        iconTheme: const IconThemeData(color: orange),
+      ),
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus(); // Dismiss the keyboard

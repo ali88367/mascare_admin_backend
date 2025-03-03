@@ -31,7 +31,7 @@ class UserDetails extends StatelessWidget {
                 },
                 child: const Padding(
                     padding: EdgeInsets.only(left: 10, top: 10),
-                    child: Icon(Icons.menu,color: Colors.white,)))
+                    child: Icon(Icons.menu, color: Colors.white,)))
                 : const SizedBox.shrink(),
             const SizedBox(height: 20),
             Center(
@@ -80,7 +80,7 @@ class UserDetails extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 80),
+                  const SizedBox(width: 120),
                 ],
               ),
             ),
@@ -109,16 +109,16 @@ class UserDetails extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final user = filteredUsers[index];
                       final bool isSuspended = user['is_suspended'] ?? false;
+                      final String userId = user['uid'] ?? '';  // Get the user ID
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child:
-                        Column(
+                        child: Column(
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Stack( // Use Stack to layer the suspended icon
+                                Stack(
                                   children: [
                                     Container(
                                       width: 50,
@@ -152,11 +152,15 @@ class UserDetails extends StatelessWidget {
                                       )
                                           : const Icon(Icons.person, color: Colors.white),
                                     ),
-                                    if (isSuspended) // Position the suspended icon
+                                    if (isSuspended)
                                       Positioned(
-                                        top: 0, // Adjust as needed
-                                        right: 0, // Adjust as needed
-                                        child: Icon(Icons.report, color: Colors.red, size: 20,),
+                                        top: 0,
+                                        right: 0,
+                                        child: Icon(
+                                          Icons.report,
+                                          color: Colors.red,
+                                          size: 20,
+                                        ),
                                       ),
                                   ],
                                 ),
@@ -177,8 +181,8 @@ class UserDetails extends StatelessWidget {
                                   ),
                                 ),
                                 Expanded(
-                                  child: Row( // Added Row to include the Role and the Suspended Icon
-                                    mainAxisAlignment: MainAxisAlignment.center, // Center the content horizontally
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         user['role'] ?? '',
@@ -191,7 +195,7 @@ class UserDetails extends StatelessWidget {
                                 Row(
                                   children: [
                                     IconButton(
-                                      onPressed: () => _showEditDialog(context, user), //edit user details
+                                      onPressed: () => _showEditDialog(context, user),
                                       icon: const Icon(Icons.edit),
                                       color: Colors.blue,
                                     ),
@@ -206,22 +210,24 @@ class UserDetails extends StatelessWidget {
                                       color: Colors.red,
                                     ),
                                     IconButton(
-                                      onPressed: (){
-                                        Get.to(Messages(user_id: 'NElrihBib0feBYYiPmM3Lqeo64s1',));
-                      },
+                                      //Now passing the id of the user
+                                      onPressed: () {
+                                        Get.to(Messages(user_id: userId));
+                                      },
                                       icon: const Icon(Icons.messenger),
                                       color: Colors.blue,
                                     ),
-
                                   ],
                                 ),
                               ],
                             ),
-
-                            SizedBox(height: 10,),
+                            SizedBox(
+                              height: 10,
+                            ),
                             const Divider(),
-                            SizedBox(height: 10,),
-
+                            SizedBox(
+                              height: 10,
+                            ),
                           ],
                         ),
                       );

@@ -4,11 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+import '../colors.dart';
 import 'messages.dart';
 
 // Define your color palette here (or import from a separate file if you prefer)
-const Color blueColor = Color(0xFF007BFF); // Example Blue color
-const Color textColor = Colors.grey; // Example Grey color
 
 class UserInbox extends StatefulWidget {
   const UserInbox({super.key});
@@ -45,7 +44,7 @@ class _UserInboxState extends State<UserInbox> {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: blueColor,
+              color: darkBlue,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -121,20 +120,20 @@ class _UserInboxState extends State<UserInbox> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
-                        child: CircularProgressIndicator(color: blueColor),
+                        child: CircularProgressIndicator(color: darkBlue),
                       );
                     } else if (snapshot.hasError) {
                       return Center(
                         child: Text(
                           "An Error occurred",
-                          style: TextStyle(fontSize: sp(context, 16), color: blueColor, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: sp(context, 16), color: darkBlue, fontWeight: FontWeight.w500),
                         ),
                       );
                     } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return Center(
                         child: Text(
                           "No Chats",
-                          style: TextStyle(fontSize: sp(context, 16), color: blueColor, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: sp(context, 16), color: darkBlue, fontWeight: FontWeight.w500),
                         ),
                       );
                     }
@@ -152,7 +151,7 @@ class _UserInboxState extends State<UserInbox> {
                         return Center(
                           child: Text(
                             "No Matching Chats",
-                            style: TextStyle(fontSize: sp(context, 16), color: blueColor, fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: sp(context, 16), color: darkBlue, fontWeight: FontWeight.w500),
                           ),
                         );
                       }
@@ -198,18 +197,19 @@ class _UserInboxState extends State<UserInbox> {
                 Expanded(
                   child: Row(
                     children: [
-                      Obx(
-                            () => CircleAvatar(
+                      Obx(() {
+                        final hasProfilePic = controller.profile_pic.value.isNotEmpty;
+                        return CircleAvatar(
                           radius: 23,
-                          backgroundImage: controller.profile_pic.value.isNotEmpty
+                          backgroundImage: hasProfilePic
                               ? NetworkImage(controller.profile_pic.value)
-                              : null,
-                          backgroundColor: blueColor.withOpacity(.1),
-                          child: controller.profile_pic.value.isEmpty
-                              ? Icon(Icons.person, size: w(context, 7), color: blueColor)
-                              : const SizedBox(),
-                        ),
-                      ),
+                              : null, // Set backgroundImage to null if no profile pic
+                          backgroundColor: hasProfilePic ? Colors.transparent : darkBlue.withOpacity(.1), // Don't set backgroundColor if there's an image
+                          // child: !hasProfilePic //Conditionally Render the Icon if NO profile picture available.
+                          //     ? Icon(Icons.person, size: w(context, 7), color: darkBlue)
+                          //     : null, // Render nothing if there's an image
+                        );
+                      }),
                       SizedBox(width: w(context, 2.5)),
                       Expanded(
                         child: Column(
@@ -240,6 +240,7 @@ class _UserInboxState extends State<UserInbox> {
                   ),
                 ),
                 Obx(() {
+                  String formattedTimestamp = controller.time_stamp.value;
                   if (controller.last_sender.value != FirebaseAuth.instance.currentUser!.uid && !controller.seen.value) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -248,7 +249,7 @@ class _UserInboxState extends State<UserInbox> {
                           width: w(context, 3.5),
                           height: h(context, 1.7),
                           decoration: const BoxDecoration(
-                            color: blueColor,
+                            color: darkBlue,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -260,16 +261,16 @@ class _UserInboxState extends State<UserInbox> {
                         ),
                         SizedBox(height: h(context, 1.2)),
                         Text(
-                          controller.time_stamp.value,
-                          style: TextStyle(color: textColor, fontWeight: FontWeight.w400, fontSize: sp(context, 9)),
+                          formattedTimestamp,
+                          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: sp(context, 9)),
                         ),
                       ],
                     );
                   } else {
                     return Center(
                       child: Text(
-                        controller.time_stamp.value,
-                        style: TextStyle(color: textColor, fontWeight: FontWeight.w400, fontSize: sp(context, 9)),
+                        formattedTimestamp,
+                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: sp(context, 9)),
                       ),
                     );
                   }
@@ -296,6 +297,11 @@ class ChatWidgetController extends GetxController {
   /// Chat User Detail
   var profile_pic = "".obs;
   var user_name = "".obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+  }
 
   Future<void> getChatDetail (String widget_id) async {
     try {
