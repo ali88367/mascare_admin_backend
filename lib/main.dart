@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Mascare',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Login(),
+      home: HomeMain(),
     );
   }
 }

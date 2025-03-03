@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'colors.dart';
+import 'package:mascare_admin_backend/colors.dart';
 import 'SideBar/sidebar_controller.dart';
 import 'user_details_controller.dart'; // Import the controller
 import 'widgets/custom_button.dart';
@@ -80,7 +79,7 @@ class UserDetails extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 35),
+                  const SizedBox(width: 80),
                 ],
               ),
             ),
@@ -107,52 +106,64 @@ class UserDetails extends StatelessWidget {
                     itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
                       final user = filteredUsers[index];
+                      final bool isSuspended = user['is_suspended'] ?? false;
 
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
+                        child:
+                        Column(
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey,
-                                  ),
-                                  child: user['profile_pic'] != null && user['profile_pic']!.isNotEmpty
-                                      ? ClipOval(
-                                    child: Image.network(
-                                      user['profile_pic'],
-                                      fit: BoxFit.cover,
+                                Stack( // Use Stack to layer the suspended icon
+                                  children: [
+                                    Container(
                                       width: 50,
                                       height: 50,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Center(
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            value: loadingProgress.expectedTotalBytes != null
-                                                ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
-                                                : null,
-                                          ),
-                                        );
-                                      },
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(Icons.person, color: Colors.white);
-                                      },
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey,
+                                      ),
+                                      child: user['profile_pic'] != null && user['profile_pic']!.isNotEmpty
+                                          ? ClipOval(
+                                        child: Image.network(
+                                          user['profile_pic'],
+                                          fit: BoxFit.cover,
+                                          width: 50,
+                                          height: 50,
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                value: loadingProgress.expectedTotalBytes != null
+                                                    ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(Icons.person, color: Colors.white);
+                                          },
+                                        ),
+                                      )
+                                          : const Icon(Icons.person, color: Colors.white),
                                     ),
-                                  )
-                                      : const Icon(Icons.person, color: Colors.white),
+                                    if (isSuspended) // Position the suspended icon
+                                      Positioned(
+                                        top: 0, // Adjust as needed
+                                        right: 0, // Adjust as needed
+                                        child: Icon(Icons.report, color: Colors.red, size: 20,),
+                                      ),
+                                  ],
                                 ),
                                 Expanded(
                                   child: Text(
                                     user['name'] ?? '',
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                    style: TextStyle(fontSize: 16, color: Colors.white),
                                   ),
                                 ),
                                 Expanded(
@@ -160,18 +171,28 @@ class UserDetails extends StatelessWidget {
                                     user['email'] ?? '',
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                    style: TextStyle(fontSize: 16, color: Colors.white),
                                   ),
                                 ),
                                 Expanded(
-                                  child: Text(
-                                    user['role'] ?? '',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                                  child: Row( // Added Row to include the Role and the Suspended Icon
+                                    mainAxisAlignment: MainAxisAlignment.center, // Center the content horizontally
+                                    children: [
+                                      Text(
+                                        user['role'] ?? '',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 16, color: Colors.white),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Row(
                                   children: [
+                                    IconButton(
+                                      onPressed: () => _showEditDialog(context, user), //edit user details
+                                      icon: const Icon(Icons.edit),
+                                      color: Colors.blue,
+                                    ),
                                     IconButton(
                                       onPressed: () => userController.deleteUser(
                                         user['uid'],
@@ -182,6 +203,7 @@ class UserDetails extends StatelessWidget {
                                       icon: const Icon(Icons.delete),
                                       color: Colors.red,
                                     ),
+
                                   ],
                                 ),
                               ],
@@ -202,6 +224,62 @@ class UserDetails extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Map<String, dynamic> user) {
+    final UserController userController = Get.find<UserController>();
+    final nameController = TextEditingController(text: user['name']);
+    final emailController = TextEditingController(text: user['email']);
+    final bool isSuspended = user['is_suspended'] ?? false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: darkBlue,
+          title: const Text('Edit User', style: TextStyle(color: orange)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Name', labelStyle: TextStyle(color: orange), enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: orange))),
+                ),
+                TextField(
+                  controller: emailController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Email', labelStyle: TextStyle(color: orange), enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: orange))),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(isSuspended ? 'Unsuspend' : 'Suspend', style: TextStyle(color: isSuspended ? Colors.green : Colors.orange)),
+              onPressed: () {
+                userController.toggleUserSuspension(user['uid'], isSuspended);
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Update', style: TextStyle(color: orange)),
+              onPressed: () {
+                userController.updateUser(user['uid'], nameController.text, emailController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
