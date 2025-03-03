@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
+import 'package:mascare_admin_backend/chat/messages.dart';
 import 'package:mascare_admin_backend/pro_approve.dart';
 import '../add_event.dart';
 import '../advertisment.dart';
 import '../advertisments_lists.dart';
 import '../bookings.dart';
+import '../chat/inbox.dart';
 import '../events.dart';
 import '../reports.dart';
 import '../services.dart';
@@ -53,6 +55,8 @@ class _HomeMainState extends State<HomeMain> {
                         ? AdvertisementList()
                         : sidebarController.selectedindex.value == 7
                         ? Reports()
+                        : sidebarController.selectedindex.value == 8
+                        ?UserInbox()
 
                         : UserDetails()))
               ],

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -25,26 +26,51 @@ class _LoginState extends State<Login> {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
-    if (email == "admin@mascare.com" && password == "mascare123") {
-      // Simulate network delay (optional)
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        isLoading = false;
-      });
-      Get.offAll(HomeMain()); // Use offAll to prevent going back to login
-    } else {
-      // Simulate error delay (optional)
-      await Future.delayed(const Duration(seconds: 1)); // Optional delay
-
+    if (email != "admin@mascare.com") {
       setState(() {
         isLoading = false;
       });
 
-      // Show error message
       Get.snackbar(
         "Login Failed",
-        "Invalid email or password.",
+        "Only admin access is allowed.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      // Attempt Firebase authentication
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      Get.offAll(HomeMain()); // Navigate to home after successful login
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      String errorMessage = "An error occurred. Please try again.";
+
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found for this email.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Invalid email format.";
+      }
+
+      Get.snackbar(
+        "Login Failed",
+        errorMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,

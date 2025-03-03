@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mascare_admin_backend/colors.dart';
 import 'SideBar/sidebar_controller.dart';
+import 'chat/messages.dart';
 import 'user_details_controller.dart'; // Import the controller
 import 'widgets/custom_button.dart';
 
@@ -92,6 +93,7 @@ class UserDetails extends StatelessWidget {
                   }
 
                   if (snapshot.hasError) {
+                    print("Error: ${snapshot.error}");
                     return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red),));
                   }
 
@@ -202,6 +204,13 @@ class UserDetails extends StatelessWidget {
                                       ),
                                       icon: const Icon(Icons.delete),
                                       color: Colors.red,
+                                    ),
+                                    IconButton(
+                                      onPressed: (){
+                                        Get.to(Messages(user_id: 'NElrihBib0feBYYiPmM3Lqeo64s1',));
+                      },
+                                      icon: const Icon(Icons.messenger),
+                                      color: Colors.blue,
                                     ),
 
                                   ],

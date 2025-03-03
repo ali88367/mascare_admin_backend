@@ -12,6 +12,7 @@ class UserController extends GetxController {
     return _firestore
         .collection('all_users')
         .where('is_deleted', isEqualTo: false)
+        .where("role", isNotEqualTo: "admin")
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
