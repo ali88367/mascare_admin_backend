@@ -19,9 +19,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Admin Panel',
+      title: 'Mascare',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: HomeMain(),
+      home: Login(),
     );
   }
 }

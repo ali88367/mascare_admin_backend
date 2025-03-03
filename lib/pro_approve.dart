@@ -25,10 +25,21 @@ class _ProApproveState extends State<ProApprove> {
         "disapprove_reason": ""
       });
 
-      // Remove the professional from the pro_requests collection
+    var user_data = await FirebaseFirestore.instance.collection("all_users").doc(uid).get();
+    var records = await FirebaseFirestore.instance.collection("records").doc("signup_records").get();
+
+    var care_centers = records.data()?["care_centers"] ?? [];
+
+    if(!care_centers.contains(user_data["care_center_name"])){
+      care_centers.add(user_data["care_center_name"]);
+
+      await FirebaseFirestore.instance.collection("records").doc("signup_records").set({
+        "care_centers": care_centers,
+      }, SetOptions(merge: true));
+      }
+
       await FirebaseFirestore.instance.collection('pro_requests').doc(docId).delete();
 
-      // Show success message using the captured messenger
       messenger.showSnackBar(
         const SnackBar(content: Text("Professional approved successfully.")),
       );

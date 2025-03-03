@@ -147,8 +147,14 @@ class _BookingsState extends State<Bookings> {
                                   final booking = bookingsController.filteredBookings[index];
                                   return BookingCard(
                                     booking: booking,
-                                    onDelete: () => bookingsController.deleteBooking(booking['id']!, booking['userId']!),
-                                  );
+                                    onDelete: () {
+                                      print(booking);
+                                      bookingsController.deleteBooking(
+                                          booking['id']!,
+                                          booking['userId']!,
+                                          booking['service_provider']!);
+
+                                    }   );
                                 },
                               );
                             }

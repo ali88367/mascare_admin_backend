@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart'; // Import for Get.snackbar
+
 
 class BookingsController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -77,16 +80,28 @@ class BookingsController extends GetxController {
     }
   }
 
-  Future<void> deleteBooking(String bookingId, String userId) async {
+  Future<void> deleteBooking(String bookingId, String userId,String serviceId) async {
     try {
       await _firestore
           .collection('bookings')
           .doc(userId)
           .collection('user_bookings')
           .doc(bookingId)
-          .delete();
+          .update({
+        'status':'Cancelled',
+        'statusTime':FieldValue.serverTimestamp()
 
-      _allBookings.removeWhere((booking) => booking['id'] == bookingId && booking['userId'] == userId);
+      });
+
+      var data = await FirebaseFirestore.instance.collection("services").doc(serviceId).get();
+
+      var customers = data["customers"] ?? [];
+
+      customers.removeWhere((map)=> map["booking_id"] == bookingId);
+
+      await FirebaseFirestore.instance.collection("services").doc(serviceId).update({
+        "customers": customers,
+      });
       Get.snackbar('Success', 'Booking deleted successfully', snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       print("Error deleting booking: $e");
@@ -101,4 +116,35 @@ class BookingsController extends GetxController {
   void setSelectedStatus(String status) {
     selectedStatus.value = status;
   }
+
+  Future<void> updateBookingStatus(String bookingId,String userId, String newStatus) async {
+    isLoading.value = true; //Show loading indicator
+
+    try {
+      // Update the booking status in Firestore
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(userId)
+          .collection('user_bookings')
+          .doc(bookingId)
+          .update({'status': newStatus});
+
+      // Optionally refresh the booking list after updating.
+      fetchAllBookings(); // Assuming getBookings() reloads the data
+      Get.snackbar('Success', 'Booking cancelled successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white);
+    } catch (error) {
+      print('Error cancelling booking: $error');
+      Get.snackbar('Error', 'Failed to cancel booking. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white);
+    } finally {
+      isLoading.value = false; //Hide loading indicator
+    }
+  }
+
+
 }
