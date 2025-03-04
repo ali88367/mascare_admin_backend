@@ -303,7 +303,7 @@ class BookingCard extends StatelessWidget {
                 children: [
                   const Text('Amount', style: TextStyle(color: Colors.grey, fontSize: 12)),
                   Text(
-                    '\$${booking['amount']?.toString() ?? '0'}',
+                    'R ${booking['amount']?.toString() ?? '0'}',
                     style: const TextStyle(fontWeight: FontWeight.w700, color: darkBlue, fontSize: 16),
                   ),
                   const SizedBox(height: 8),

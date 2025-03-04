@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
 import 'package:mascare_admin_backend/chat/messages.dart';
+import 'package:mascare_admin_backend/commission.dart';
 import 'package:mascare_admin_backend/pro_approve.dart';
 import 'package:mascare_admin_backend/pro_reviews.dart';
 import '../add_event.dart';
@@ -60,8 +61,7 @@ class _HomeMainState extends State<HomeMain> {
                         ? UserInbox()
                         : sidebarController.selectedindex.value == 9
                         ? ProReviews()
-
-                        : UserDetails()))
+                        : Commission()))
               ],
             ),
             Obx(()=>sidebarController.showsidebar.value == true? ExampleSidebarX():SizedBox.shrink(),)

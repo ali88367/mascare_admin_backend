@@ -171,6 +171,11 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
               label: 'Pro Reviews',
             ),
             SidebarXItem(
+              onTap: () => sidebarController.selectedindex.value = 10,
+              icon: Icons.monetization_on,
+              label: 'Commission',
+            ),
+            SidebarXItem(
               onTap: () {
                 sidebarController.selectedindex.value = 0;
                 sidebarController.controller = SidebarXController(selectedIndex: 0, extended: true);
