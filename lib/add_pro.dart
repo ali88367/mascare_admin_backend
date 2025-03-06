@@ -19,6 +19,8 @@ class AddProPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Add New Pro', style: TextStyle(color: orange)),
         backgroundColor: darkBlue,
+        iconTheme: const IconThemeData(color: Colors.white),
+
       ),
       body: Center(
         child: ConstrainedBox(
