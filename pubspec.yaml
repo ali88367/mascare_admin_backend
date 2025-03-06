@@ -43,9 +43,10 @@ dependencies:
   cloud_firestore:
   firebase_storage:
   firebase_auth_web:
-  file_picker:
+  file_picker: ^9.0.2
   intl:
   infinite_scroll_pagination:
+  image_picker:
 
 
 dev_dependencies:

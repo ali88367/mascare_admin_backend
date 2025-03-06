@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
       title: 'Mascare',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: HomeMain(),
+
     );
   }
 }

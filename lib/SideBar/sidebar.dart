@@ -52,140 +52,147 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
   Widget build(BuildContext context) {
     return GetBuilder<SidebarController>(
       builder: (sidebarController) {
-        return SidebarX(
-          controller: sidebarController.controller,
-          animationDuration: Duration.zero, // Disable animation globally for SidebarX
-          theme: SidebarXTheme(
-            hoverTextStyle: TextStyle(color: orange),
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: darkBlue,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            hoverColor: Colors.white.withOpacity(0.1), // Subtle white hover
-            textStyle: TextStyle(color: Colors.white70, fontSize: 18),
-            selectedTextStyle: TextStyle(color: orange, fontSize: 18, fontWeight: FontWeight.bold),
-            itemTextPadding: const EdgeInsets.only(left: 10),
-            selectedItemTextPadding: const EdgeInsets.only(left: 10),
-            itemDecoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white30),
-            ),
-            selectedItemDecoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: orange),
-              color: darkBlue,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 10,
-                )
-              ],
-            ),
-            iconTheme: IconThemeData(
-              color: Colors.white,
-              size: 20,
-            ),
-            selectedIconTheme: IconThemeData(
-              color: orange,
-              size: 20,
-            ),
+        return ScrollbarTheme(
+          data: ScrollbarThemeData(
+            thumbColor: MaterialStateProperty.all(Colors.orange), // Scrollbar color
+            trackColor: MaterialStateProperty.all(Colors.white30), // Track color
+            trackBorderColor: MaterialStateProperty.all(Colors.transparent),
           ),
-          extendedTheme: SidebarXTheme(
-            width: 200,
-            decoration: BoxDecoration(
-              color: darkBlue,
+          child: SidebarX(
+            controller: sidebarController.controller,
+            animationDuration: Duration.zero, // Disable animation globally for SidebarX
+            theme: SidebarXTheme(
+              hoverTextStyle: TextStyle(color: orange),
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: darkBlue,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              hoverColor: Colors.white.withOpacity(0.1), // Subtle white hover
+              textStyle: TextStyle(color: Colors.white70, fontSize: 18),
+              selectedTextStyle: TextStyle(color: orange, fontSize: 18, fontWeight: FontWeight.bold),
+              itemTextPadding: const EdgeInsets.only(left: 10),
+              selectedItemTextPadding: const EdgeInsets.only(left: 10),
+              itemDecoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white30),
+              ),
+              selectedItemDecoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: orange),
+                color: darkBlue,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black54,
+                    blurRadius: 10,
+                  )
+                ],
+              ),
+              iconTheme: IconThemeData(
+                color: Colors.white,
+                size: 20,
+              ),
+              selectedIconTheme: IconThemeData(
+                color: orange,
+                size: 20,
+              ),
             ),
-          ),
-          footerDivider: Divider(color: Colors.white30),
-          headerBuilder: (context, extended) {
-            return Column(
-              children: [
-                SizedBox(height: 20),
-                Obx(() => sidebarController.showsidebar.value
-                    ? Align(
-                  alignment: Alignment.topRight,
-                  child: Icon(Icons.clear_sharp, color: orange),
-                )
-                    : SizedBox.shrink()),
-                SizedBox(
-                  height: 200,
-                  width: 200,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Image.asset('assets/images/logo.png'),
+            extendedTheme: SidebarXTheme(
+              width: 200,
+              decoration: BoxDecoration(
+                color: darkBlue,
+              ),
+            ),
+            footerDivider: Divider(color: Colors.white30),
+            headerBuilder: (context, extended) {
+              return Column(
+                children: [
+                  SizedBox(height: 20),
+                  Obx(() => sidebarController.showsidebar.value
+                      ? Align(
+                    alignment: Alignment.topRight,
+                    child: Icon(Icons.clear_sharp, color: orange),
+                  )
+                      : SizedBox.shrink()),
+                  SizedBox(
+                    height: 200,
+                    width: 200,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Image.asset('assets/images/logo.png'),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
-          items: [
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 0,
-              icon: Icons.person,
-              label: 'User Data',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 1,
-              icon: Icons.person,
-              label: 'Approve Pro',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 2,
-              icon: Icons.book,
-              label: 'Events',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 3,
-              icon: Icons.event,
-              label: 'Add Events',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 4,
-              icon: Icons.campaign,
-              label: 'Add Ads',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 5,
-              icon: Icons.build,
-              label: 'Bookings',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 6,
-              icon: Icons.design_services_rounded,
-              label: 'Advertisements',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 7,
-              icon: Icons.add_alert,
-              label: 'Reports',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 8,
-              icon: Icons.messenger,
-              label: 'Messages',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 9,
-              icon: Icons.reviews,
-              label: 'Pro Reviews',
-            ),
-            SidebarXItem(
-              onTap: () => sidebarController.selectedindex.value = 10,
-              icon: Icons.monetization_on,
-              label: 'Commission',
-            ),
-            SidebarXItem(
-              onTap: () {
-                sidebarController.selectedindex.value = 0;
-                sidebarController.controller = SidebarXController(selectedIndex: 0, extended: true);
-                sidebarController.update();
-                _showLogoutDialog();
-              },
-              icon: Icons.logout,
-              label: 'Log out',
-            ),
-          ],
+                ],
+              );
+            },
+            items: [
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 0,
+                icon: Icons.person,
+                label: 'User Data',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 1,
+                icon: Icons.person,
+                label: 'Approve Pro',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 2,
+                icon: Icons.book,
+                label: 'Events',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 3,
+                icon: Icons.event,
+                label: 'Add Events',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 4,
+                icon: Icons.campaign,
+                label: 'Add Ads',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 5,
+                icon: Icons.build,
+                label: 'Bookings',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 6,
+                icon: Icons.design_services_rounded,
+                label: 'Advertisements',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 7,
+                icon: Icons.add_alert,
+                label: 'Reports',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 8,
+                icon: Icons.messenger,
+                label: 'Messages',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 9,
+                icon: Icons.reviews,
+                label: 'Pro Reviews',
+              ),
+              SidebarXItem(
+                onTap: () => sidebarController.selectedindex.value = 10,
+                icon: Icons.monetization_on,
+                label: 'Commission',
+              ),
+              SidebarXItem(
+                onTap: () {
+                  sidebarController.selectedindex.value = 0;
+                  sidebarController.controller = SidebarXController(selectedIndex: 0, extended: true);
+                  sidebarController.update();
+                  _showLogoutDialog();
+                },
+                icon: Icons.logout,
+                label: 'Log out',
+              ),
+            ],
+          ),
         );
       },
     );
