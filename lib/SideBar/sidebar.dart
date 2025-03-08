@@ -54,21 +54,24 @@ class _ExampleSidebarXState extends State<ExampleSidebarX> {
       builder: (sidebarController) {
         return ScrollbarTheme(
           data: ScrollbarThemeData(
-            thumbColor: MaterialStateProperty.all(Colors.orange), // Scrollbar color
+            thumbVisibility: MaterialStatePropertyAll(true),
+            thumbColor: MaterialStateProperty.all(orange),
+            thickness: MaterialStateProperty.all(4), // Set thickness to 4
             trackColor: MaterialStateProperty.all(Colors.white30), // Track color
             trackBorderColor: MaterialStateProperty.all(Colors.transparent),
           ),
           child: SidebarX(
             controller: sidebarController.controller,
-            animationDuration: Duration.zero, // Disable animation globally for SidebarX
+            animationDuration: Duration.zero,
             theme: SidebarXTheme(
               hoverTextStyle: TextStyle(color: orange),
-              margin: const EdgeInsets.all(10),
+              margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: darkBlue,
                 borderRadius: BorderRadius.circular(20),
               ),
-              hoverColor: Colors.white.withOpacity(0.1), // Subtle white hover
+              hoverColor: Colors.white.withOpacity(0.1),
+
               textStyle: TextStyle(color: Colors.white70, fontSize: 18),
               selectedTextStyle: TextStyle(color: orange, fontSize: 18, fontWeight: FontWeight.bold),
               itemTextPadding: const EdgeInsets.only(left: 10),

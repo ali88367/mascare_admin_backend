@@ -86,97 +86,106 @@ class _ReportsState extends State<Reports> {
 
                 final reports = reportsSnapshot.data ?? [];
 
-                return ListView.builder(
-                  itemCount: reports.length,
-                  itemBuilder: (context, index) {
-                    final reportData = reports[index]['reportData'];
-                    final reporterName = reports[index]['reporterName'];
-                    final serviceName = reports[index]['serviceName'];
+                return RawScrollbar(
+                  thumbVisibility: true, // Always visible
+                  trackVisibility: true, // Track always visible
+                  thickness: 4, // Adjust thickness
+                  radius: const Radius.circular(10), // Rounded edges
+                  scrollbarOrientation: ScrollbarOrientation.right, // Position scrollbar on the right
+                  interactive: true,
+                  thumbColor: orange,
+                  child: ListView.builder(
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final reportData = reports[index]['reportData'];
+                      final reporterName = reports[index]['reporterName'];
+                      final serviceName = reports[index]['serviceName'];
 
-                    return Card(
-                      color: Colors.white,
-                      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: darkBlue,
-                                  child: const Icon(Icons.person, color: Colors.white),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        reporterName,
-                                        style: TextStyle(
-                                            color: darkBlue, fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text('Reporter', style: TextStyle(color: Colors.grey[700])),
-                                    ],
+                      return Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: darkBlue,
+                                    child: const Icon(Icons.person, color: Colors.white),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: orange,
-                                  child: const Icon(Icons.business, color: Colors.white),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        serviceName,
-                                        style: TextStyle(
-                                            color: orange, fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text('Service Provider', style: TextStyle(color: Colors.grey[700])),
-                                    ],
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          reporterName,
+                                          style: TextStyle(
+                                              color: darkBlue, fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text('Reporter', style: TextStyle(color: Colors.grey[700])),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 20, thickness: 1),
-                            Text(
-                              'Reason:',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              reportData['reason'] ?? 'No reason provided',
-                              style: const TextStyle(color: Colors.black, fontSize: 14),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                const Icon(Icons.access_time, color: Colors.grey, size: 18),
-                                const SizedBox(width: 5),
-                                Text(
-                                  DateFormat('yyyy-MM-dd HH:mm:ss')
-                                      .format((reportData['timestamp'] as Timestamp).toDate()),
-                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: orange,
+                                    child: const Icon(Icons.business, color: Colors.white),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          serviceName,
+                                          style: TextStyle(
+                                              color: orange, fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text('Service Provider', style: TextStyle(color: Colors.grey[700])),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 20, thickness: 1),
+                              Text(
+                                'Reason:',
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                reportData['reason'] ?? 'No reason provided',
+                                style: const TextStyle(color: Colors.black, fontSize: 14),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  const Icon(Icons.access_time, color: Colors.grey, size: 18),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    DateFormat('yyyy-MM-dd HH:mm:ss')
+                                        .format((reportData['timestamp'] as Timestamp).toDate()),
+                                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             );

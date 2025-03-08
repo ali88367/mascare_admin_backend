@@ -93,36 +93,45 @@ class _ProReviewsState extends State<ProReviews> {
     return Scaffold(
       backgroundColor: darkBlue,
 
-      body: Center( // Center the content horizontally
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500), // Limit width
-          padding: const EdgeInsets.only(top: 20), // Padding from above
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.white,))
-              : _serviceProviders.isEmpty
-              ? Center(child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                'assets/empty_state.svg',
-                height: 100,
-                color: Colors.white,
+      body: ScrollbarTheme(
+        data: ScrollbarThemeData(
+          thumbVisibility: WidgetStatePropertyAll(true),
+          thumbColor: WidgetStateProperty.all(orange),
+          thickness: WidgetStateProperty.all(4), // Set thickness to 4
+          trackColor: WidgetStateProperty.all(Colors.white30), // Track color
+          trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+        ),
+        child: Center( // Center the content horizontally
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500), // Limit width
+            padding: const EdgeInsets.only(top: 20), // Padding from above
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white,))
+                : _serviceProviders.isEmpty
+                ? Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/empty_state.svg',
+                  height: 100,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 16),
+                const Text("No Service Providers Found", style: TextStyle(color: Colors.white)),
+              ],
+            ))
+                : RefreshIndicator(
+              onRefresh: _fetchServiceProviderData,
+              color: Colors.white,
+              backgroundColor: accentColor,
+              child: ListView.builder(
+                itemCount: _serviceProviders.length,
+                padding: const EdgeInsets.all(12.0),
+                itemBuilder: (context, index) {
+                  final provider = _serviceProviders[index];
+                  return ServiceProviderCard(provider: provider);
+                },
               ),
-              const SizedBox(height: 16),
-              const Text("No Service Providers Found", style: TextStyle(color: Colors.white)),
-            ],
-          ))
-              : RefreshIndicator(
-            onRefresh: _fetchServiceProviderData,
-            color: Colors.white,
-            backgroundColor: accentColor,
-            child: ListView.builder(
-              itemCount: _serviceProviders.length,
-              padding: const EdgeInsets.all(12.0),
-              itemBuilder: (context, index) {
-                final provider = _serviceProviders[index];
-                return ServiceProviderCard(provider: provider);
-              },
             ),
           ),
         ),

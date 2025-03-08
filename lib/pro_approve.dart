@@ -237,6 +237,8 @@ class _ProApproveState extends State<ProApprove> with TickerProviderStateMixin {
                             color: Colors.white,
                           )))
                   : const SizedBox.shrink(),
+
+              SizedBox(height: 50,),
               TabBar(
                 controller: _tabController,
                 indicatorColor: orange,
@@ -250,7 +252,7 @@ class _ProApproveState extends State<ProApprove> with TickerProviderStateMixin {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 700),

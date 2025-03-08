@@ -34,7 +34,8 @@ class UserController extends GetxController {
       return users;
     } else {
       return users.where((user) =>
-          user['name'].toString().toLowerCase().contains(searchQuery.value)).toList();
+          user['name'].toString().toLowerCase().contains(searchQuery.value))
+          .toList();
     }
   }
 
@@ -46,7 +47,10 @@ class UserController extends GetxController {
     });
   }
 
-  Future<void> deleteUser(String userId, String? email, String? username, String? phoneNumber) async {
+  RxBool isLoading = false.obs; // Use RxBool for reactive loading state
+
+  Future<void> deleteUser(String userId, String? email, String? username,
+      String? phoneNumber) async {
     bool? shouldDelete = await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: darkBlue,
@@ -59,15 +63,41 @@ class UserController extends GetxController {
             child: const Text('Cancel', style: TextStyle(color: Colors.white)),
             onPressed: () => Get.back(result: false),
           ),
-          TextButton(
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            onPressed: () => Get.back(result: true),
-          ),
+          StatefulBuilder( // Use StatefulBuilder
+              builder: (BuildContext context, StateSetter setState) {
+                return TextButton(
+                  child: isLoading.value // Use the observable value
+                      ? const SizedBox( // Show loader
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 3,
+                    ),
+                  )
+                      : const Text('Delete', style: TextStyle(color: Colors.red)),
+                  onPressed: isLoading.value ? null : () { // Disable when loading
+                    Get.back(result: true);
+                  },
+                );
+              }
+          )
+
         ],
       ),
     );
 
     if (shouldDelete == true) {
+      // Move the dialog outside the try-catch block
+      Get.dialog(
+        Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+      isLoading.value = true; // Start loading
+
+
       try {
         // 1: Delete from Firebase Authentication
         try {
@@ -85,23 +115,25 @@ class UserController extends GetxController {
                 Get.snackbar(
                     "Error",
                     "The user needs to be signed in to delete from Authentication.",
-                    snackPosition: SnackPosition.BOTTOM);
+                    snackPosition: SnackPosition.TOP);
               }
             } catch (authError) {
               print("Error deleting user from Firebase Auth: $authError");
-              Get.snackbar('Error', 'Failed to delete user from Authentication: $authError',
-                  snackPosition: SnackPosition.BOTTOM);
+              Get.snackbar('Error',
+                  'Failed to delete user from Authentication: $authError',
+                  snackPosition: SnackPosition.TOP);
             }
           }
         } catch (e) {
           print("Error checking sign-in methods: $e");
           Get.snackbar('Error', 'Failed to check sign-in methods: $e',
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
         }
 
 
         // 2: Delete from 'records' collection
-        DocumentReference signupRecordsRef = _firestore.collection('records').doc('signup_records');
+        DocumentReference signupRecordsRef = _firestore.collection('records')
+            .doc('signup_records');
         DocumentSnapshot snapshot = await signupRecordsRef.get();
 
         if (snapshot.exists) {
@@ -144,20 +176,7 @@ class UserController extends GetxController {
           print("Service document not found for user: $userId");
         }
 
-        Get.snackbar(
-          'Success',
-          'User deleted successfully',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.blue[900],
-          titleText: const Text(
-            'Success',
-            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-          ),
-          messageText: const Text(
-            'User deleted successfully',
-            style: TextStyle(color: Colors.white),
-          ),
-        );
+
       } catch (e) {
         print("Error deleting user: $e");
         Get.snackbar(
@@ -165,11 +184,38 @@ class UserController extends GetxController {
           'Failed to delete user: $e',
           snackPosition: SnackPosition.BOTTOM,
         );
+      } finally {
+        isLoading.value = false; // Stop loading regardless of success/failure
+
+        // Check if the Get.dialog is open before closing it.
+
+        if (Get.isDialogOpen!) {
+          Get.back();  // Close the loading dialog
+        }
+
+        if (!Get.isSnackbarOpen) { // Showing snackbar only when no other snackbar is open
+
+          Get.snackbar(
+            'Success',
+            'User deleted successfully',
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.blue[900],
+            titleText: const Text(
+              'Success',
+              style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+            ),
+            messageText: const Text(
+              'User deleted successfully',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
       }
     }
   }
-
-  Future<void> updateUser(String userId, String newName, String newEmail) async {
+  Future<void> updateUser(String userId, String newName,
+      String newEmail) async {
     try {
       await _firestore.collection('all_users').doc(userId).update({
         'user_name': newName,
@@ -179,7 +225,15 @@ class UserController extends GetxController {
         'Success',
         'User details updated successfully',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.blue[900],
+        titleText: const Text(
+          'Success',
+          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+        ),
+        messageText: const Text(
+          'User details updated successfully',
+          style: TextStyle(color: Colors.white),
+        ),
       );
     } catch (e) {
       print("Error updating user: $e");
@@ -191,7 +245,8 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> toggleUserSuspension(String userId, bool isCurrentlySuspended) async {
+  Future<void> toggleUserSuspension(String userId,
+      bool isCurrentlySuspended) async {
     try {
       // 1. Update is_suspended in all_users collection
       await _firestore.collection('all_users').doc(userId).update({
@@ -204,14 +259,17 @@ class UserController extends GetxController {
           'is_suspended': !isCurrentlySuspended,
         });
       } catch (e) {
-        print("Service document not found or update failed for user: $userId.  This is not necessarily an error.");
+        print(
+            "Service document not found or update failed for user: $userId.  This is not necessarily an error.");
         // It's okay if the document doesn't exist, but we should log the attempt.
       }
 
 
       Get.snackbar(
         'Success',
-        'User ${!isCurrentlySuspended ? 'suspended' : 'unsuspended'} successfully',
+        'User ${!isCurrentlySuspended
+            ? 'suspended'
+            : 'unsuspended'} successfully',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
       );

@@ -66,6 +66,20 @@ class _AddEventState extends State<AddEvent> {
           : DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.dark().copyWith( // Use ThemeData.dark for a dark theme
+            colorScheme: ColorScheme.dark(
+              primary: orange, // Header background color
+              onPrimary: Colors.white, // Header text color
+              surface: darkBlue, // Body background color
+              onSurface: Colors.white, // Body text color
+            ),
+            dialogBackgroundColor: darkBlue, // Background color of the dialog
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
@@ -81,6 +95,38 @@ class _AddEventState extends State<AddEvent> {
       initialTime: controller.text.isNotEmpty
           ? TimeOfDay.fromDateTime(DateFormat('hh:mm a').parse(controller.text))
           : TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: darkBlue,
+              hourMinuteTextColor: Colors.white,
+              dayPeriodTextColor: Colors.white,
+              dialTextColor: Colors.white,
+              hourMinuteColor: darkBlue.withOpacity(0.8),
+              dayPeriodColor: darkBlue.withOpacity(0.8),
+              dialBackgroundColor: Colors.grey.shade800,
+              entryModeIconColor: Colors.white,
+              hourMinuteTextStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              dayPeriodTextStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              helpTextStyle: const TextStyle(color: Colors.white70),
+              inputDecorationTheme: const InputDecorationTheme(
+                border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                labelStyle: TextStyle(color: Colors.white),
+              ),
+              dialHandColor: orange, // Set the dial hand color
+            ),
+            colorScheme: ColorScheme.dark(
+              primary: orange,
+              onPrimary: Colors.white,
+              surface: darkBlue,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: darkBlue,
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedTime != null) {
@@ -97,6 +143,23 @@ class _AddEventState extends State<AddEvent> {
         controller.text = formattedTime;
       });
     }
+  }
+
+  // Function to clear the text fields
+  void _clearTextFields() {
+    _titleController.clear();
+    _descriptionController.clear();
+    _organizerController.clear();
+    _dateController.clear();
+    _fromTimeController.clear();
+    _toTimeController.clear();
+    _ticketPriceController.clear();
+    _contactNumberController.clear();
+    _addressController.clear();
+    setState(() {
+      _image = null; // Also clear the selected image
+      _imageUrl = null; // And the image URL
+    });
   }
 
 
@@ -163,6 +226,7 @@ class _AddEventState extends State<AddEvent> {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+        _clearTextFields(); // Clear the fields after successful add
       } else {
         await _firestore.collection('events').doc(widget.eventId).update(eventData);
         Get.snackbar(
@@ -257,114 +321,123 @@ class _AddEventState extends State<AddEvent> {
         padding: EdgeInsets.symmetric(
           horizontal: width < 768 ? 20 : 60,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 700),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: Container(
-                              height: 200,
-                              width: double.infinity,
+        child: ScrollbarTheme(
+          data: ScrollbarThemeData(
+            thumbVisibility: WidgetStatePropertyAll(true),
+            thumbColor: WidgetStateProperty.all(orange),
+            thickness: WidgetStateProperty.all(4), // Set thickness to 4
+            trackColor: WidgetStateProperty.all(Colors.white30), // Track color
+            trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 700),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: Container(
+                                height: 200,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.grey[300],
+                                ),
+                                child: _image != null
+                                    ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.memory(
+                                    _image!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                    : (_imageUrl != null && _imageUrl!.isNotEmpty)
+                                    ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    _imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(child: Text("Error loading image"));
+                                    },
+                                  ),
+                                )
+                                    : const Icon(Icons.image, size: 40, color: Colors.grey),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildInputField("Enter Title", _titleController),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: _buildInputField("Ticket Price", _ticketPriceController, isNumber: true),
+                                )
+                              ],
+                            ),
+                            _buildInputField("Enter Description", _descriptionController, maxLines: 5),
+                            _buildInputField("Organizer Name", _organizerController),
+                            _buildDatePickerField("Event Date", _dateController, _pickDate),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTimePickerField("From Time", _fromTimeController, () => _pickTime(_fromTimeController)),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: _buildTimePickerField("To Time", _toTimeController, () => _pickTime(_toTimeController)),
+                                ),
+                              ],
+                            ),
+                            _buildInputField("Contact Number", _contactNumberController, isNumber: true),
+                            _buildInputField("Address", _addressController, maxLines: 3),
+                            const SizedBox(height: 30),
+                            Container(
+                              width: 700, // Set the width
+                              height: 50, // Set the height
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.grey[300],
+                                color: _isLoading ? orange.withOpacity(0.7) : orange, // Change opacity when loading
+                                borderRadius: BorderRadius.circular(10), // Rounded corners
                               ),
-                              child: _image != null
-                                  ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.memory(
-                                  _image!,
-                                  fit: BoxFit.cover,
+                              child: InkWell(
+                                onTap: _isLoading ? null : addEvent, // Disable onTap when loading
+                                borderRadius: BorderRadius.circular(10), // Match the container's border radius
+                                child: Center(
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white), // White loader
+                                  )
+                                      : Text(
+                                    widget.eventId == null ? 'Add Event' : 'Update Event',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                              )
-                                  : (_imageUrl != null && _imageUrl!.isNotEmpty)
-                                  ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  _imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(child: Text("Error loading image"));
-                                  },
-                                ),
-                              )
-                                  : const Icon(Icons.image, size: 40, color: Colors.grey),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildInputField("Enter Title", _titleController),
                               ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: _buildInputField("Ticket Price", _ticketPriceController, isNumber: true),
-                              )
-                            ],
-                          ),
-                          _buildInputField("Enter Description", _descriptionController, maxLines: 5),
-                          _buildInputField("Organizer Name", _organizerController),
-                          _buildDatePickerField("Event Date", _dateController, _pickDate),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildTimePickerField("From Time", _fromTimeController, () => _pickTime(_fromTimeController)),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: _buildTimePickerField("To Time", _toTimeController, () => _pickTime(_toTimeController)),
-                              ),
-                            ],
-                          ),
-                          _buildInputField("Contact Number", _contactNumberController, isNumber: true),
-                          _buildInputField("Address", _addressController, maxLines: 3),
-                          const SizedBox(height: 30),
-                      Container(
-                        width: 700, // Set the width
-                        height: 50, // Set the height
-                        decoration: BoxDecoration(
-                          color: _isLoading ? orange.withOpacity(0.7) : orange, // Change opacity when loading
-                          borderRadius: BorderRadius.circular(10), // Rounded corners
-                        ),
-                        child: InkWell(
-                          onTap: _isLoading ? null : addEvent, // Disable onTap when loading
-                          borderRadius: BorderRadius.circular(10), // Match the container's border radius
-                          child: Center(
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white), // White loader
                             )
-                                : Text(
-                              widget.eventId == null ? 'Add Event' : 'Update Event',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          ],
                         ),
-                      )
-                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

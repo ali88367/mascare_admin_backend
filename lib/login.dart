@@ -26,7 +26,7 @@ class _LoginState extends State<Login> {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
-    if (email != "admin@mascare.com") {
+    if (email != "admin@mascare.co.za") {
       setState(() {
         isLoading = false;
       });

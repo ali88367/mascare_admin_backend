@@ -48,119 +48,131 @@ class _BookingsState extends State<Bookings> {
 
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        // Search Bar
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search Bookings...',
-                            prefixIcon: const Icon(Icons.search, color: orange),
-                            fillColor: Colors.white,
-                            filled: true,
-                            border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
-                            hintStyle: const TextStyle(color: orange),
+                    child: ScrollbarTheme(
+                      data: ScrollbarThemeData(
+                        thumbVisibility: WidgetStatePropertyAll(true),
+                        thumbColor: WidgetStateProperty.all(orange),
+                        thickness: WidgetStateProperty.all(4), // Set thickness to 4
+                        trackColor: WidgetStateProperty.all(Colors.white30), // Track color
+                        trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+                      ),
+                      child: Column(
+                        children: [
+                          // Search Bar
+                          TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search Bookings...',
+                              prefixIcon: const Icon(Icons.search, color: orange),
+                              fillColor: Colors.white,
+                              filled: true,
+                              border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.all(Radius.circular(10))),
+                              hintStyle: const TextStyle(color: orange),
+                            ),
+                            onChanged: bookingsController.setSearchQuery,
                           ),
-                          onChanged: bookingsController.setSearchQuery,
-                        ),
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                        // Filter Buttons
-                        Obx(() => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => bookingsController.setSelectedStatus('all'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(
-                                  bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
-                                ),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                          // Filter Buttons
+                          Obx(() => Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => bookingsController.setSelectedStatus('all'),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all<Color>(
+                                    bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
+                                  ),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                    ),
                                   ),
                                 ),
+                                child: const Text('All', style: TextStyle(color: Colors.white)),
                               ),
-                              child: const Text('All', style: TextStyle(color: Colors.white)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => bookingsController.setSelectedStatus('upcoming'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(
-                                  bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
-                                ),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                              ElevatedButton(
+                                onPressed: () => bookingsController.setSelectedStatus('upcoming'),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all<Color>(
+                                    bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
+                                  ),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                    ),
                                   ),
                                 ),
+                                child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
                               ),
-                              child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => bookingsController.setSelectedStatus('completed'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(
-                                  bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
-                                ),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                              ElevatedButton(
+                                onPressed: () => bookingsController.setSelectedStatus('completed'),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all<Color>(
+                                    bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
+                                  ),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                    ),
                                   ),
                                 ),
+                                child: const Text('Completed', style: TextStyle(color: Colors.white)),
                               ),
-                              child: const Text('Completed', style: TextStyle(color: Colors.white)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => bookingsController.setSelectedStatus('cancelled'),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all<Color>(
-                                  bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
-                                ),
-                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8), // Add radius here
+                              ElevatedButton(
+                                onPressed: () => bookingsController.setSelectedStatus('cancelled'),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all<Color>(
+                                    bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
+                                  ),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                    ),
                                   ),
                                 ),
+                                child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
                               ),
-                              child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        )),
-                        const SizedBox(height: 16),
+                            ],
+                          )),
+                          const SizedBox(height: 16),
 
-                        // Booking List
-                        Expanded(
-                          child: Obx(() {
-                            if (bookingsController.isLoading.value) {
-                              return const Center(child: CircularProgressIndicator());
-                            } else if (bookingsController.filteredBookings.isEmpty) {
-                              return const Center(
-                                child: Text(
-                                  'No Bookings Found!',
-                                  style: TextStyle(color: Colors.white, fontSize: 16),
-                                ),
-                              );
-                            } else {
-                              return ListView.builder(
-                                itemCount: bookingsController.filteredBookings.length,
-                                itemBuilder: (context, index) {
-                                  final booking = bookingsController.filteredBookings[index];
-                                  return BookingCard(
-                                    booking: booking,
-                                    onDelete: () {
-                                      print(booking);
-                                      bookingsController.deleteBooking(
-                                          booking['id']!,
-                                          booking['userId']!,
-                                          booking['service_provider']!);
+                          // Booking List
+                          Expanded(
+                            child: Obx(() {
+                              if (bookingsController.isLoading.value) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (bookingsController.filteredBookings.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    'No Bookings Found!',
+                                    style: TextStyle(color: Colors.white, fontSize: 16),
+                                  ),
+                                );
+                              } else {
+                                return ListView.builder(
+                                  itemCount: bookingsController.filteredBookings.length,
+                                  itemBuilder: (context, index) {
+                                    final booking = bookingsController.filteredBookings[index];
+                                    return Padding(
+                                     padding:  EdgeInsets.symmetric(horizontal: 10),
+                                      child: BookingCard(
+                                        booking: booking,
+                                        onDelete: () {
+                                          print(booking);
+                                          bookingsController.deleteBooking(
+                                              booking['id']!,
+                                              booking['userId']!,
+                                              booking['service_provider']!);
 
-                                    }   );
-                                },
-                              );
-                            }
-                          }),
-                        ),
-                      ],
+                                        }   ),
+                                    );
+                                  },
+                                );
+                              }
+                            }),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

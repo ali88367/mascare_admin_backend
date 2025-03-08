@@ -56,6 +56,7 @@ class _AddUserFormState extends State<AddUserForm> {
   //Other state variables
   final _formKey = GlobalKey<FormState>();
   Uint8List? _profileImage; // To store the selected image (Uint8List for web)
+  bool _isLoading = false; // Added loading state
 
 
   // Function to pick single image from gallery for profile picture
@@ -88,7 +89,7 @@ class _AddUserFormState extends State<AddUserForm> {
       return await storageRef.getDownloadURL();
     } catch (e) {
       print("Error uploading image: $e");
-      Get.snackbar('Error', 'Failed to upload image: $e', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Failed to upload image: $e', snackPosition: SnackPosition.TOP); // changed to top
       return null;
     }
   }
@@ -153,118 +154,154 @@ class _AddUserFormState extends State<AddUserForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Center( // Added Center Widget
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 700), // Apply max width
-        padding: const EdgeInsets.all(16.0), // Add some padding around the form
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Picture Selection
-              Center(
-                child: GestureDetector(
-                  onTap: _pickProfileImage,
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey,
-                    backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
-                    child: _profileImage == null ? Icon(Icons.camera_alt, size: 40, color: Colors.white) : null,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Common Fields (for both User and Pro)
-              Row(
+    return Stack(
+      children: [
+        Center( // Added Center Widget
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 700), // Apply max width
+            padding: const EdgeInsets.all(16.0), // Add some padding around the form
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInputField('User Name', userNameController),
-                  _buildInputField('Email', emailController),
+                  // Profile Picture Selection
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickProfileImage,
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey,
+                        backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
+                        child: _profileImage == null ? Icon(Icons.camera_alt, size: 40, color: Colors.white) : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Common Fields (for both User and Pro)
+                  Row(
+                    children: [
+                      _buildInputField('User Name', userNameController),
+                      _buildInputField('Email', emailController),
+                    ],
+                  ),
+                  _buildInputField('Password', passwordController),
+                  _buildInputField('Phone Number', numberController, isNumber: true),
+                  _buildInputField('Address', addressController),
+
+                  const SizedBox(height: 24), // Add some spacing before the buttons
+
+                  // Wrap the actions in a Row and use MainAxisAlignment.end
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      SizedBox(
+                        width: 100,
+                        height: 40,
+
+                        child: ElevatedButton(
+
+                          style: ElevatedButton.styleFrom(backgroundColor: orange),
+                          onPressed: _isLoading ? null : () async { // Disable the button when loading
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                _isLoading = true; // Show loader
+                              });
+                              try {
+                                // 1. Create User in Firebase Authentication
+                                UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                                  email: emailController.text.trim(),
+                                  password: passwordController.text.trim(),
+                                );
+
+                                // 2.  Get the UID
+                                String uid = userCredential.user!.uid;
+
+                                // 3. Upload Profile Image and Get URL
+                                String? profilePicURL = await _uploadImageToFirebase(uid, _profileImage!, 'profile');
+
+
+                                // 5.  Data for all_users Collection
+                                Map<String, dynamic> allUsersData = {
+                                  'user_name': userNameController.text.trim(),
+                                  'uid': uid,
+                                  'role': 'user', // Fixed role for user
+                                  'profile_pic': profilePicURL ?? '',
+                                  'number': numberController.text.trim(),
+                                  'is_suspended': false,
+                                  'is_deleted': false,
+                                  'fcm_token': '',
+                                  'email': emailController.text.trim(),
+                                  'address': addressController.text.trim(),
+                                  'account_approved': false, // Default value
+                                  'details_complete': true, // Since all fields are added
+                                  'disapprove_reason': '',
+                                  'registration_number': "",
+                                  'years_of_experience': 0, // Convert to integer
+                                  'service_added': false,
+                                  'createdAt': FieldValue.serverTimestamp(), // Use server timestamp
+                                  'category': "",
+                                  'care_center_name':"",
+                                  'savedServices': [], // Initialize as empty array
+                                };
+
+                                // 6. Create all_users document
+                                await FirebaseFirestore.instance.collection('all_users').doc(uid).set(allUsersData);
+
+                                Navigator.of(context).pop(); // Close the dialog
+                                Get.snackbar(
+                                  'Success',
+                                  'User Added successfully',
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.blue[900],
+                                  titleText: const Text(
+                                    'Success',
+                                    style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                                  ),
+                                  messageText: const Text(
+                                    'User Added successfully',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                );
+                              } on FirebaseAuthException catch (e) {
+                                print("Firebase Auth Error: ${e.code} - ${e.message}");
+                                Get.snackbar('Error', 'Firebase Authentication Error: ${e.message}', snackPosition: SnackPosition.TOP); // changed to top
+                              } catch (e) {
+                                print("Firestore Error: $e");
+                                Get.snackbar('Error', 'Failed to add pro: $e', snackPosition: SnackPosition.TOP); // changed to top
+                              } finally {
+                                setState(() {
+                                  _isLoading = false; // Hide loader
+                                });
+                              }
+                            }
+                          },
+                          child: _isLoading ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(orange),
+                            ),
+                          ) : const Text('Add', style: TextStyle(color: darkBlue)), // Set the text color to darkBlue
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              _buildInputField('Password', passwordController),
-              _buildInputField('Phone Number', numberController, isNumber: true),
-              _buildInputField('Address', addressController),
-
-              const SizedBox(height: 24), // Add some spacing before the buttons
-
-              // Wrap the actions in a Row and use MainAxisAlignment.end
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  ElevatedButton( // Use ElevatedButton for the "Add" button
-                    style: ElevatedButton.styleFrom(backgroundColor: orange),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        try {
-                          // 1. Create User in Firebase Authentication
-                          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                            email: emailController.text.trim(),
-                            password: passwordController.text.trim(),
-                          );
-
-                          // 2.  Get the UID
-                          String uid = userCredential.user!.uid;
-
-                          // 3. Upload Profile Image and Get URL
-                          String? profilePicURL = await _uploadImageToFirebase(uid, _profileImage!, 'profile');
-
-
-                          // 5.  Data for all_users Collection
-                          Map<String, dynamic> allUsersData = {
-                            'user_name': userNameController.text.trim(),
-                            'uid': uid,
-                            'role': 'user', // Fixed role for user
-                            'profile_pic': profilePicURL ?? '',
-                            'number': numberController.text.trim(),
-                            'is_suspended': false,
-                            'is_deleted': false,
-                            'fcm_token': '',
-                            'email': emailController.text.trim(),
-                            'address': addressController.text.trim(),
-                            'account_approved': false, // Default value
-                            'details_complete': true, // Since all fields are added
-                            'disapprove_reason': '',
-                            'registration_number': "",
-                            'years_of_experience': 0, // Convert to integer
-                            'service_added': false,
-                            'createdAt': FieldValue.serverTimestamp(), // Use server timestamp
-                            'category': "",
-                            'care_center_name':"",
-                            'savedServices': [], // Initialize as empty array
-                          };
-
-                          // 6. Create all_users document
-                          await FirebaseFirestore.instance.collection('all_users').doc(uid).set(allUsersData);
-
-                          Navigator.of(context).pop(); // Close the dialog
-                          Get.snackbar('Success', 'User added successfully', snackPosition: SnackPosition.BOTTOM);
-
-                        } on FirebaseAuthException catch (e) {
-                          print("Firebase Auth Error: ${e.code} - ${e.message}");
-                          Get.snackbar('Error', 'Firebase Authentication Error: ${e.message}', snackPosition: SnackPosition.BOTTOM);
-                        } catch (e) {
-                          print("Firestore Error: $e");
-                          Get.snackbar('Error', 'Failed to add pro: $e', snackPosition: SnackPosition.BOTTOM);
-                        }
-                      }
-                    },
-                    child: const Text('Add', style: TextStyle(color: darkBlue)), // Set the text color to darkBlue
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        // Removed the full screen loader
+      ],
     );
   }
 }

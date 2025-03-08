@@ -74,7 +74,7 @@ class _EventsState extends State<Events> {
                     padding: EdgeInsets.only(left: 10, top: 10),
                     child: Icon(Icons.menu, color: Colors.white,))) // Ensure the icon is visible
                 : const SizedBox.shrink(),
-
+SizedBox(height: 50,),
             Expanded( // Use Expanded to make the rest of the content fill the space
               child: Center(
                 child: ConstrainedBox(

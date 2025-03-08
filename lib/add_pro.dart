@@ -20,7 +20,6 @@ class AddProPage extends StatelessWidget {
         title: const Text('Add New Pro', style: TextStyle(color: orange)),
         backgroundColor: darkBlue,
         iconTheme: const IconThemeData(color: Colors.white),
-
       ),
       body: Center(
         child: ConstrainedBox(
@@ -65,17 +64,18 @@ class _AddUserFormState extends State<AddUserForm> {
   final _formKey = GlobalKey<FormState>();
   Uint8List? _profileImage;
   List<Uint8List> _additionalImages = [];
+  bool _isLoading = false; // Added loading state
 
   final List<String> experienceOptions = [
-    'Less than one year',
-    'Less than two years',
-    'Less than five years',
+    'less than one year',
+    'less than two years',
+    'less than three years',
   ];
 
   final List<String> categoryOptions = [
     'Caregiver',
     'Nanny',
-    'Baby Sitter',
+    'Babysitter',
   ];
 
   Future<void> _pickProfileImage() async {
@@ -116,7 +116,7 @@ class _AddUserFormState extends State<AddUserForm> {
       await storageRef.putData(image);
       return await storageRef.getDownloadURL();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to upload image: $e', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Failed to upload image: $e', snackPosition: SnackPosition.TOP); // changed to top
       return null;
     }
   }
@@ -285,7 +285,7 @@ class _AddUserFormState extends State<AddUserForm> {
         items: categoryOptions.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(value, style: const TextStyle(color: Colors.white)),  // Ensure text color is white
+            child: Text(value, style: const TextStyle(color: Colors.white)), // Ensure text color is white
           );
         }).toList(),
         onChanged: (newValue) {
@@ -298,210 +298,263 @@ class _AddUserFormState extends State<AddUserForm> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: GestureDetector(
-                onTap: _pickProfileImage,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey,
-                  backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
-                  child: _profileImage == null ? const Icon(Icons.camera_alt, size: 40, color: Colors.white) : null,
+    return Scaffold(
+      backgroundColor: darkBlue,
+      body: ScrollbarTheme(
+
+        data: ScrollbarThemeData(
+          thumbVisibility: MaterialStatePropertyAll(true),
+          thumbColor: MaterialStateProperty.all(orange),
+          thickness: MaterialStateProperty.all(4), // Set thickness to 4
+          trackColor: MaterialStateProperty.all(Colors.white30), // Track color
+          trackBorderColor: MaterialStateProperty.all(Colors.transparent),
+        ),
+        child: LayoutBuilder(  // Use LayoutBuilder to get the available height
+          builder: (BuildContext context, BoxConstraints viewportConstraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: viewportConstraints.maxHeight,  // Ensure the content takes at least the full screen height
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: orange),
-                onPressed: _pickAdditionalImages,
-                child: const Text("Add Additional Images", style: TextStyle(color: darkBlue)),
-              ),
-            ),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: List.generate(
-                _additionalImages.length,
-                    (index) => Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 100,
-                      margin: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          fit: BoxFit.cover,
-                          image: MemoryImage(_additionalImages[index]),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: _pickProfileImage,
+                            child: CircleAvatar(
+                              radius: 60,
+                              backgroundColor: Colors.grey,
+                              backgroundImage: _profileImage != null ? MemoryImage(_profileImage!) : null,
+                              child: _profileImage == null ? const Icon(Icons.camera_alt, size: 40, color: Colors.white) : null,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: orange),
+                            onPressed: _pickAdditionalImages,
+                            child: const Text("Add Additional Images", style: TextStyle(color: darkBlue)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 4.0,
+                          children: List.generate(
+                            _additionalImages.length,
+                                (index) => Stack(
+                              alignment: Alignment.topRight,
+                              children: [
+                                Container(
+                                  height: 100,
+                                  width: 100,
+                                  margin: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image: MemoryImage(_additionalImages[index]),
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => _deleteAdditionalImage(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text("User Details", style: TextStyle(color: orange, fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(child: _buildInputField('User Name', userNameController)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildInputField('Email', emailController)),
+                          ],
+                        ),
+                        _buildInputField('Password', passwordController),
+                        _buildInputField('Phone Number', numberController, isNumber: true),
+                        _buildInputField('Address', addressController),
+                        _buildInputField('Care Center Name', careCenterNameController),
+                        _buildCategoryDropdown(),
+                        _buildExperienceDropdown(),
+
+                        if (widget.userType == 'pro') ...[
+                          const SizedBox(height: 24),
+                          const Text("Service Details", style: TextStyle(color: orange, fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          _buildInputField('Registration Number', registrationNumberController),
+                          _buildInputField('About Service', aboutServiceController, maxLines: 3),
+                          _buildInputField('Price Per Hour', pricePerHourController, isNumber: true),
+                          _buildInputField('Note to Parents', noteToParentsController),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDatePickerField('From Date', fromDateController, () => _pickDate(fromDateController)),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildTimePickerField('From Time', fromTimeController, () => _pickTime(fromTimeController)),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDatePickerField('To Date', toDateController, () => _pickDate(toDateController)),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildTimePickerField('To Time', toTimeController, () => _pickTime(toTimeController)),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: orange),
+                              onPressed: _isLoading ? null : () async { // Disable button when loading
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true; // Show loader
+                                  });
+                                  try {
+                                    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                                      email: emailController.text.trim(),
+                                      password: passwordController.text.trim(),
+                                    );
+                                    String uid = userCredential.user!.uid;
+
+                                    String? profilePicURL = _profileImage != null
+                                        ? await _uploadImageToFirebase(uid, _profileImage!, 'profile')
+                                        : null;
+
+                                    List<String> additionalImageUrls = [];
+                                    for (int i = 0; i < _additionalImages.length; i++) {
+                                      String? url = await _uploadImageToFirebase(uid, _additionalImages[i], 'additional_$i');
+                                      if (url != null) additionalImageUrls.add(url);
+                                    }
+
+                                    Map<String, dynamic> allUsersData = {
+                                      'user_name': userNameController.text.trim(),
+                                      'uid': uid,
+                                      'role': 'pro',
+                                      'profile_pic': profilePicURL ?? '',
+                                      'number': numberController.text.trim(),
+                                      'is_suspended': false,
+                                      'is_deleted': false,
+                                      'fcm_token': '',
+                                      'email': emailController.text.trim(),
+                                      'address': addressController.text.trim(),
+                                      'account_approved': true,
+                                      'details_complete': true,
+                                      'disapprove_reason': '',
+                                      'care_center_name': careCenterNameController.text.trim(),
+                                      'category': category,
+                                      'years_of_experience': yearsOfExperience,
+                                      'registration_number': registrationNumberController.text.trim(),
+                                      'service_added': true,
+                                      'createdAt': FieldValue.serverTimestamp(),
+                                    };
+
+                                    if (widget.userType == 'pro') {
+                                      Map<String, dynamic> servicesData = {
+                                        'about_service': aboutServiceController.text.trim(),
+                                        'availability': true,
+                                        'average_rating': '0',
+                                        'booked': false,
+                                        'care_center_name': careCenterNameController.text.trim(),
+                                        'category': category,
+                                        'company_registration': registrationNumberController.text.trim(),
+                                        'customers': [],
+                                        'fcm_token': '',
+                                        'from_date': fromDateController.text.trim(),
+                                        'from_time': fromTimeController.text.trim(),
+                                        'full_time_care': false,
+                                        'is_suspended': false,
+                                        'mentioned_services': [],
+                                        'note_to_parents': noteToParentsController.text.trim(),
+                                        'photo': profilePicURL ?? '',
+                                        'photos': additionalImageUrls,
+                                        'price_per_hour': double.tryParse(pricePerHourController.text.trim()) ?? 0.0,
+                                        'registration_number': registrationNumberController.text.trim(),
+                                        'service_provider': uid,
+                                        'service_ratings': '',
+                                        'single_photo': true,
+                                        'to_date': toDateController.text.trim(),
+                                        'to_time': toTimeController.text.trim(),
+                                        'work_hours': '',
+                                      };
+                                      await FirebaseFirestore.instance.collection('services').doc(uid).set(servicesData);
+                                    }
+
+                                    await FirebaseFirestore.instance.collection('all_users').doc(uid).set(allUsersData);
+                                    Navigator.of(context).pop();
+                                    Get.snackbar(
+                                      'Success',
+                                      'Pro Added successfully',
+                                      snackPosition: SnackPosition.TOP,
+                                      backgroundColor: Colors.blue[900],
+                                      titleText: const Text(
+                                        'Success',
+                                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                                      ),
+                                      messageText: const Text(
+                                        'Pro Added successfully',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    );                          } on FirebaseAuthException catch (e) {
+                                    Get.snackbar('Error', 'Firebase Authentication Error: ${e.message}', snackPosition: SnackPosition.TOP);  // Changed to top
+                                  } catch (e) {
+                                    Get.snackbar('Error', 'Failed to add pro: $e', snackPosition: SnackPosition.TOP);  // Changed to top
+                                  } finally {
+                                    setState(() {
+                                      _isLoading = false; // Hide loader
+                                    });
+                                  }
+                                }
+                              },
+                              child: _isLoading
+                                  ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(orange),
+                                ),
+                              )
+                                  : const Text('Add', style: TextStyle(color: darkBlue)),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () => _deleteAdditionalImage(index),
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                        child: const Icon(Icons.close, size: 16, color: Colors.white),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text("User Details", style: TextStyle(color: orange, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(child: _buildInputField('User Name', userNameController)),
-                const SizedBox(width: 16),
-                Expanded(child: _buildInputField('Email', emailController)),
-              ],
-            ),
-            _buildInputField('Password', passwordController),
-            _buildInputField('Phone Number', numberController, isNumber: true),
-            _buildInputField('Address', addressController),
-            _buildInputField('Care Center Name', careCenterNameController),
-            _buildCategoryDropdown(),
-            _buildExperienceDropdown(),
-
-            if (widget.userType == 'pro') ...[
-              const SizedBox(height: 24),
-              const Text("Service Details", style: TextStyle(color: orange, fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-
-              _buildInputField('Registration Number', registrationNumberController),
-              _buildInputField('About Service', aboutServiceController, maxLines: 3),
-              _buildInputField('Price Per Hour', pricePerHourController, isNumber: true),
-              _buildInputField('Note to Parents', noteToParentsController),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDatePickerField('From Date', fromDateController, () => _pickDate(fromDateController)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTimePickerField('From Time', fromTimeController, () => _pickTime(fromTimeController)),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDatePickerField('To Date', toDateController, () => _pickDate(toDateController)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTimePickerField('To Time', toTimeController, () => _pickTime(toTimeController)),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: orange),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      try {
-                        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                          email: emailController.text.trim(),
-                          password: passwordController.text.trim(),
-                        );
-                        String uid = userCredential.user!.uid;
-
-                        String? profilePicURL = _profileImage != null
-                            ? await _uploadImageToFirebase(uid, _profileImage!, 'profile')
-                            : null;
-
-                        List<String> additionalImageUrls = [];
-                        for (int i = 0; i < _additionalImages.length; i++) {
-                          String? url = await _uploadImageToFirebase(uid, _additionalImages[i], 'additional_$i');
-                          if (url != null) additionalImageUrls.add(url);
-                        }
-
-                        Map<String, dynamic> allUsersData = {
-                          'user_name': userNameController.text.trim(),
-                          'uid': uid,
-                          'role': 'pro',
-                          'profile_pic': profilePicURL ?? '',
-                          'number': numberController.text.trim(),
-                          'is_suspended': false,
-                          'is_deleted': false,
-                          'fcm_token': '',
-                          'email': emailController.text.trim(),
-                          'address': addressController.text.trim(),
-                          'account_approved': true,
-                          'details_complete': true,
-                          'disapprove_reason': '',
-                          'care_center_name': careCenterNameController.text.trim(),
-                          'category': category,
-                          'years_of_experience': yearsOfExperience,
-                          'registration_number': registrationNumberController.text.trim(),
-                          'service_added': true,
-                          'createdAt': FieldValue.serverTimestamp(),
-                        };
-
-                        if (widget.userType == 'pro') {
-                          Map<String, dynamic> servicesData = {
-                            'about_service': aboutServiceController.text.trim(),
-                            'availability': true,
-                            'average_rating': '0',
-                            'booked': false,
-                            'care_center_name': careCenterNameController.text.trim(),
-                            'category': category,
-                            'company_registration': registrationNumberController.text.trim(),
-                            'customers': [],
-                            'fcm_token': '',
-                            'from_date': fromDateController.text.trim(),
-                            'from_time': fromTimeController.text.trim(),
-                            'full_time_care': false,
-                            'is_suspended': false,
-                            'mentioned_services': [],
-                            'note_to_parents': noteToParentsController.text.trim(),
-                            'photo': profilePicURL ?? '',
-                            'photos': additionalImageUrls,
-                            'price_per_hour': double.tryParse(pricePerHourController.text.trim()) ?? 0.0,
-                            'registration_number': registrationNumberController.text.trim(),
-                            'service_provider': uid,
-                            'service_ratings': '',
-                            'single_photo': true,
-                            'to_date': toDateController.text.trim(),
-                            'to_time': toTimeController.text.trim(),
-                            'work_hours': '',
-
-                          };
-                          await FirebaseFirestore.instance.collection('services').doc(uid).set(servicesData);
-                        }
-
-                        await FirebaseFirestore.instance.collection('all_users').doc(uid).set(allUsersData);
-                        Navigator.of(context).pop();
-                        Get.snackbar('Success', 'Pro added successfully', snackPosition: SnackPosition.BOTTOM);
-                      } catch (e) {
-                        Get.snackbar('Error', 'Failed to add pro: $e', snackPosition: SnackPosition.BOTTOM);
-                      }
-                    }
-                  },
-                  child: const Text('Add', style: TextStyle(color: darkBlue)),
-                ),
-              ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

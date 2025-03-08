@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar.dart';
 import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart';
 import 'package:mascare_admin_backend/chat/messages.dart';
+import 'package:mascare_admin_backend/colors.dart';
 import 'package:mascare_admin_backend/commission.dart';
 import 'package:mascare_admin_backend/pro_approve.dart';
 import 'package:mascare_admin_backend/pro_reviews.dart';
@@ -29,6 +30,7 @@ class _HomeMainState extends State<HomeMain> {
   Widget build(BuildContext context) {
     final width=MediaQuery.of(context)!.size.width;
     return Scaffold(
+      backgroundColor: orange,
       body: GestureDetector(
         onTap: () {
           if(sidebarController.showsidebar.value ==true) {
