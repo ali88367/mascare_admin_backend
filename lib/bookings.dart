@@ -73,66 +73,75 @@ class _BookingsState extends State<Bookings> {
                           const SizedBox(height: 16),
 
                           // Filter Buttons
-                          Obx(() => Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => bookingsController.setSelectedStatus('all'),
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all<Color>(
-                                    bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
-                                  ),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                          Obx(() => SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => bookingsController.setSelectedStatus('all'),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                      bookingsController.selectedStatus.value == 'all' ? orange : Colors.grey,
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8), // Add radius here
+                                      ),
                                     ),
                                   ),
+                                  child: const Text('All', style: TextStyle(color: Colors.white)),
                                 ),
-                                child: const Text('All', style: TextStyle(color: Colors.white)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => bookingsController.setSelectedStatus('upcoming'),
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all<Color>(
-                                    bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
-                                  ),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                const SizedBox(width: 16),
+
+                                ElevatedButton(
+                                  onPressed: () => bookingsController.setSelectedStatus('upcoming'),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                      bookingsController.selectedStatus.value == 'upcoming' ? orange : Colors.grey,
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8), // Add radius here
+                                      ),
                                     ),
                                   ),
+                                  child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
                                 ),
-                                child: const Text('Upcoming', style: TextStyle(color: Colors.white)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => bookingsController.setSelectedStatus('completed'),
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all<Color>(
-                                    bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
-                                  ),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                const SizedBox(width: 16),
+
+                                ElevatedButton(
+                                  onPressed: () => bookingsController.setSelectedStatus('completed'),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                      bookingsController.selectedStatus.value == 'completed' ? orange : Colors.grey,
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8), // Add radius here
+                                      ),
                                     ),
                                   ),
+                                  child: const Text('Completed', style: TextStyle(color: Colors.white)),
                                 ),
-                                child: const Text('Completed', style: TextStyle(color: Colors.white)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => bookingsController.setSelectedStatus('cancelled'),
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all<Color>(
-                                    bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
-                                  ),
-                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8), // Add radius here
+                                const SizedBox(width: 16),
+
+                                ElevatedButton(
+                                  onPressed: () => bookingsController.setSelectedStatus('cancelled'),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                      bookingsController.selectedStatus.value == 'cancelled' ? orange : Colors.grey,
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8), // Add radius here
+                                      ),
                                     ),
                                   ),
+                                  child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
                                 ),
-                                child: const Text('Cancelled', style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
+                              ],
+                            ),
                           )),
                           const SizedBox(height: 16),
 

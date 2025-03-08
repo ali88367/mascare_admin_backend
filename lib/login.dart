@@ -34,7 +34,7 @@ class _LoginState extends State<Login> {
       Get.snackbar(
         "Login Failed",
         "Only admin access is allowed.",
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
       );

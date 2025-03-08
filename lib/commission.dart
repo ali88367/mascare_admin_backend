@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+
+import 'SideBar/sidebar_controller.dart';
 
 class Commission extends StatefulWidget {
   const Commission({super.key});
@@ -14,6 +17,7 @@ class Commission extends StatefulWidget {
 class _CommissionState extends State<Commission> {
   double? _currentCommission;
   final TextEditingController _commissionController = TextEditingController();
+  final SidebarController sidebarController = Get.find<SidebarController>();
 
   @override
   void initState() {
@@ -67,78 +71,99 @@ class _CommissionState extends State<Commission> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBlue,
-      body: Center( // Wrap the Column in a Center widget
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'Current Commission: ${_currentCommission ?? 'Loading...'}%',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: 100, // Limit the width of the TextField
-                child: TextFormField(
-                  controller: _commissionController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly, // Only allow digits
-                    LengthLimitingTextInputFormatter(2), // Limit to 2 digits
-                  ],
-                  decoration: const InputDecoration(
-                    labelText: 'New (%)',
-                    labelStyle: TextStyle(color: Colors.white70),
-                    border: OutlineInputBorder(),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white70),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center, // Center the text inside the field
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_commissionController.text.isNotEmpty) {
-                    try {
-                      double newCommission = double.parse(_commissionController.text);
-                      if (newCommission >= 0 && newCommission <= 100) {  //Validate if commission percentage is between 0 to 100
-                        _updateCommission(newCommission);
-                        _commissionController.clear(); // Clear the text field
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Commission percentage must be between 0 and 100.')),
-                        );
-                      }
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+          Get.width < 768
+          ? GestureDetector(
+          onTap: () {
+        sidebarController.showsidebar.value = true;
 
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Invalid input. Please enter a valid number.')),
-                      );
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a commission value.')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Or any other color you prefer
-                ),
-                child: const Text(
-                  'Update Commission',
-                  style: TextStyle(color: Colors.white),
+            },
+            child: const Padding(
+            padding: EdgeInsets.only(left: 10, top: 10),
+            child: Icon(Icons.menu,
+            color: Colors.white,))) // Ensure the icon is visible
+          : const SizedBox.shrink(),
+        SizedBox(height: 300,),
+            Center( // Wrap the Column in a Center widget
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Current Commission: ${_currentCommission ?? 'Loading...'}%',
+                      style: const TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: 100, // Limit the width of the TextField
+                      child: TextFormField(
+                        controller: _commissionController,
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly, // Only allow digits
+                          LengthLimitingTextInputFormatter(2), // Limit to 2 digits
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'New (%)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white70),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        textAlign: TextAlign.center, // Center the text inside the field
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_commissionController.text.isNotEmpty) {
+                          try {
+                            double newCommission = double.parse(_commissionController.text);
+                            if (newCommission >= 0 && newCommission <= 100) {  //Validate if commission percentage is between 0 to 100
+                              _updateCommission(newCommission);
+                              _commissionController.clear(); // Clear the text field
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Commission percentage must be between 0 and 100.')),
+                              );
+                            }
+
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Invalid input. Please enter a valid number.')),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a commission value.')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue, // Or any other color you prefer
+                      ),
+                      child: const Text(
+                        'Update Commission',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

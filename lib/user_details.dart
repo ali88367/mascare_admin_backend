@@ -83,16 +83,16 @@ class _UserDetailsState extends State<UserDetails> {
             ),
             Expanded( // Wrap the Padding with Expanded to give it bounded height
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 20),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        const SizedBox(width: 40),
+                        const SizedBox(width: 50),
                         Expanded(
                           child: Text(
-                            '      Name',
+                            'Name',
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: orange),
                             textAlign: TextAlign.center,
                           ),

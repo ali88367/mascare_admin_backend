@@ -332,6 +332,19 @@ class _AddEventState extends State<AddEvent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Get.width < 768
+                  ? GestureDetector(
+                  onTap: () {
+                    sidebarController.showsidebar.value = true;
+                  },
+                  child: const Padding(
+                      padding: EdgeInsets.only(left: 10, top: 10),
+                      child: Icon(
+                        Icons.menu,
+                        color: Colors.white,
+                      )))
+                  : const SizedBox.shrink(),
+
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),

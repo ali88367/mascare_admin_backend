@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:mascare_admin_backend/colors.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';  // Import Get package
+import 'package:mascare_admin_backend/SideBar/sidebar_controller.dart'; // Import the SidebarController
 
 class ProReviews extends StatefulWidget {
   const ProReviews({super.key});
@@ -15,6 +17,8 @@ class ProReviews extends StatefulWidget {
 class _ProReviewsState extends State<ProReviews> {
   List<ServiceProviderData> _serviceProviders = [];
   bool _isLoading = true;
+  final SidebarController sidebarController = Get.find<SidebarController>(); // Initialize SidebarController using GetX
+
 
   @override
   void initState() {
@@ -92,48 +96,67 @@ class _ProReviewsState extends State<ProReviews> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBlue,
-
-      body: ScrollbarTheme(
-        data: ScrollbarThemeData(
-          thumbVisibility: WidgetStatePropertyAll(true),
-          thumbColor: WidgetStateProperty.all(orange),
-          thickness: WidgetStateProperty.all(4), // Set thickness to 4
-          trackColor: WidgetStateProperty.all(Colors.white30), // Track color
-          trackBorderColor: WidgetStateProperty.all(Colors.transparent),
-        ),
-        child: Center( // Center the content horizontally
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500), // Limit width
-            padding: const EdgeInsets.only(top: 20), // Padding from above
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.white,))
-                : _serviceProviders.isEmpty
-                ? Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/empty_state.svg',
-                  height: 100,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 16),
-                const Text("No Service Providers Found", style: TextStyle(color: Colors.white)),
-              ],
-            ))
-                : RefreshIndicator(
-              onRefresh: _fetchServiceProviderData,
-              color: Colors.white,
-              backgroundColor: accentColor,
-              child: ListView.builder(
-                itemCount: _serviceProviders.length,
-                padding: const EdgeInsets.all(12.0),
-                itemBuilder: (context, index) {
-                  final provider = _serviceProviders[index];
-                  return ServiceProviderCard(provider: provider);
+      body: Padding( // Added Padding widget to contain the menu icon
+        padding: const EdgeInsets.all(8.0),  // added padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Get.width < 768
+                ? GestureDetector(
+                onTap: () {
+                  sidebarController.showsidebar.value = true;
                 },
+                child: const Padding(
+                    padding: EdgeInsets.only(left: 10, top: 10),
+                    child: Icon(Icons.menu,
+                        color: Colors.white))) // Ensure the icon is visible
+                : const SizedBox.shrink(),
+            Expanded( // Added Expanded widget to wrap the original body content
+              child: ScrollbarTheme(
+                data: ScrollbarThemeData(
+                  thumbVisibility: WidgetStatePropertyAll(true),
+                  thumbColor: WidgetStateProperty.all(orange),
+                  thickness: WidgetStateProperty.all(4),
+                  trackColor: WidgetStateProperty.all(Colors.white30),
+                  trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+                ),
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    padding: const EdgeInsets.only(top: 20),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator(color: Colors.white,))
+                        : _serviceProviders.isEmpty
+                        ? Center(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/empty_state.svg',
+                          height: 100,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text("No Service Providers Found", style: TextStyle(color: Colors.white)),
+                      ],
+                    ))
+                        : RefreshIndicator(
+                      onRefresh: _fetchServiceProviderData,
+                      color: Colors.white,
+                      backgroundColor: accentColor,
+                      child: ListView.builder(
+                        itemCount: _serviceProviders.length,
+                        padding: const EdgeInsets.all(12.0),
+                        itemBuilder: (context, index) {
+                          final provider = _serviceProviders[index];
+                          return ServiceProviderCard(provider: provider);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
